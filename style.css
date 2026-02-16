@@ -112,50 +112,66 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 99999;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .fs-modal-content {
     background: white;
-    border-radius: 8px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    max-width: 450px;
-    width: 90%;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    max-width: 480px;
+    width: 95%;
     max-height: 90vh;
     overflow-y: auto;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
 }
 
 .fs-modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 20px;
-    border-bottom: 1px solid #e0e0e0;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e8ecf0;
 }
 
 .fs-modal-header h3 {
     margin: 0;
     color: #366383;
     font-size: 18px;
+    font-weight: 600;
 }
 
 .fs-modal-close {
-    background: none;
+    background: #f5f7fa;
     border: none;
-    font-size: 24px;
+    font-size: 20px;
     cursor: pointer;
     color: #666;
-    padding: 0;
+    padding: 8px 12px;
     line-height: 1;
     width: auto;
+    border-radius: 6px;
+    transition: all 0.2s;
 }
 
 .fs-modal-close:hover {
+    background: #e8ecf0;
     color: #333;
 }
 
@@ -163,6 +179,180 @@
     padding: 20px;
 }
 
+/* Validation Summary */
+.fs-validation-summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.fs-validation-summary.success {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.fs-validation-summary.error {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.fs-validation-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.fs-validation-summary.success .fs-validation-icon {
+    background: #4caf50;
+    color: white;
+}
+
+.fs-validation-summary.error .fs-validation-icon {
+    background: #ef5350;
+    color: white;
+}
+
+.fs-warnings-count {
+    margin-left: auto;
+    background: #ff9800;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+}
+
+/* Field Rows */
+.fs-field-row {
+    margin-bottom: 16px;
+}
+
+.fs-field-row > label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.fs-field-input {
+    position: relative;
+}
+
+.fs-field-input input,
+.fs-field-input select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #e0e5ec;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s;
+    background: #fff;
+}
+
+.fs-field-input input:focus,
+.fs-field-input select:focus {
+    outline: none;
+    border-color: #366383;
+    box-shadow: 0 0 0 3px rgba(54, 99, 131, 0.1);
+}
+
+/* Field States */
+.fs-field-input input.success {
+    border-color: #4caf50;
+    background: #f1f8e9;
+}
+
+.fs-field-input input.warning {
+    border-color: #ff9800;
+    background: #fff8e1;
+}
+
+.fs-field-input input.error {
+    border-color: #ef5350;
+    background: #ffebee;
+}
+
+/* Field Errors */
+.fs-field-error {
+    display: block;
+    font-size: 11px;
+    color: #c62828;
+    margin-top: 4px;
+    font-weight: 500;
+    min-height: 16px;
+}
+
+.fs-field-input input.success + .fs-field-error,
+.fs-field-input input:not(.error):not(.warning) + .fs-field-error:empty {
+    color: #2e7d32;
+}
+
+.fs-field-input input.warning + .fs-field-error {
+    color: #ef6c00;
+}
+
+/* Modal Footer */
+.fs-modal-footer {
+    display: flex;
+    gap: 10px;
+    padding: 16px 20px;
+    border-top: 1px solid #e8ecf0;
+    background: #f9fafb;
+    border-radius: 0 0 12px 12px;
+}
+
+.fs-btn {
+    flex: 1;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.fs-btn-cancel {
+    background: #e8ecf0;
+    color: #555;
+    width: auto;
+}
+
+.fs-btn-cancel:hover {
+    background: #dce0e5;
+}
+
+.fs-btn-fill {
+    background: linear-gradient(135deg, #366383 0%, #2d5270 100%);
+    color: white;
+    width: auto;
+}
+
+.fs-btn-fill:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(54, 99, 131, 0.3);
+}
+
+.fs-btn-fill:disabled {
+    background: #adb5bd;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Old styles compatibility */
 .fs-errors,
 .fs-warnings {
     margin-bottom: 15px;
@@ -184,72 +374,4 @@
 .fs-warnings ul {
     margin: 5px 0 0 0;
     padding-left: 20px;
-}
-
-.fs-data-grid {
-    display: grid;
-    gap: 12px;
-}
-
-.fs-data-grid label {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 13px;
-    color: #333;
-}
-
-.fs-data-grid input,
-.fs-data-grid select {
-    flex: 1;
-    max-width: 200px;
-    padding: 6px 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 13px;
-    margin-left: 10px;
-}
-
-.fs-data-grid input:focus,
-.fs-data-grid select:focus {
-    outline: none;
-    border-color: #366383;
-}
-
-.fs-modal-footer {
-    display: flex;
-    gap: 10px;
-    padding: 15px 20px;
-    border-top: 1px solid #e0e0e0;
-}
-
-.fs-btn {
-    flex: 1;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.fs-btn-cancel {
-    background: #e0e0e0;
-    color: #333;
-    width: auto;
-}
-
-.fs-btn-cancel:hover {
-    background: #d0d0d0;
-}
-
-.fs-btn-fill {
-    background: #366383;
-    color: white;
-    width: auto;
-}
-
-.fs-btn-fill:hover {
-    background: #2d5270;
 }

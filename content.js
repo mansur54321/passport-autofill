@@ -289,7 +289,7 @@
     }
 
     /**
-     * Shows preview modal with extracted data
+     * Shows preview modal with extracted data and validation
      * @param {Object} data - Parsed passport data
      * @param {string} touristIndex - Tourist index
      * @param {Element} zoneElement - Drop zone element
@@ -301,6 +301,9 @@
 
         const modal = document.createElement('div');
         modal.id = 'fs-preview-modal';
+        
+        const validation = validatePassportData(data);
+        
         modal.innerHTML = `
             <div class="fs-modal-content">
                 <div class="fs-modal-header">
@@ -308,38 +311,90 @@
                     <button class="fs-modal-close">&times;</button>
                 </div>
                 <div class="fs-modal-body">
-                    ${data.errors.length > 0 ? `
-                        <div class="fs-errors">
-                            <strong>Errors:</strong>
-                            <ul>${data.errors.map(e => '<li>' + Utils.escapeHtml(e) + '</li>').join('')}</ul>
-                        </div>
-                    ` : ''}
-                    ${data.warnings.length > 0 ? `
-                        <div class="fs-warnings">
-                            <strong>Warnings:</strong>
-                            <ul>${data.warnings.map(w => '<li>' + Utils.escapeHtml(w) + '</li>').join('')}</ul>
-                        </div>
-                    ` : ''}
+                    <div class="fs-validation-summary ${validation.isValid ? 'success' : 'error'}">
+                        <span class="fs-validation-icon">${validation.isValid ? '✓' : '!'}</span>
+                        <span>${validation.isValid ? 'Data looks good' : 'Please check highlighted fields'}</span>
+                        ${validation.warnings.length > 0 ? '<span class="fs-warnings-count">' + validation.warnings.length + ' warning(s)</span>' : ''}
+                    </div>
+                    
                     <div class="fs-data-grid">
-                        <label>Surname: <input type="text" id="preview-surname" value="${Utils.escapeHtml(data.surname)}"></label>
-                        <label>Name: <input type="text" id="preview-name" value="${Utils.escapeHtml(data.name)}"></label>
-                        <label>Passport: <input type="text" id="preview-number" value="${Utils.escapeHtml(data.number)}"></label>
-                        <label>IIN: <input type="text" id="preview-iin" value="${Utils.escapeHtml(data.iin)}"></label>
-                        <label>Birth Date: <input type="text" id="preview-birth" value="${Utils.escapeHtml(data.birthDate)}"></label>
-                        <label>Valid Until: <input type="text" id="preview-valid" value="${Utils.escapeHtml(data.validDate)}"></label>
-                        <label>Gender: 
-                            <select id="preview-gender">
-                                <option value="1" ${data.gender === '1' ? 'selected' : ''}>Male</option>
-                                <option value="0" ${data.gender === '0' ? 'selected' : ''}>Female</option>
-                            </select>
-                        </label>
-                        <label>Email: <input type="email" id="preview-email" value="${Utils.escapeHtml(data.email || '')}"></label>
-                        <label>Phone: <input type="text" id="preview-phone" value="${Utils.escapeHtml(data.phone || '')}"></label>
+                        <div class="fs-field-row">
+                            <label>Surname</label>
+                            <div class="fs-field-input">
+                                <input type="text" id="preview-surname" value="${Utils.escapeHtml(data.surname)}" class="${getFieldClass('surname', data)}">
+                                <span class="fs-field-error" id="error-surname">${getFieldError('surname', data)}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="fs-field-row">
+                            <label>Name</label>
+                            <div class="fs-field-input">
+                                <input type="text" id="preview-name" value="${Utils.escapeHtml(data.name)}" class="${getFieldClass('name', data)}">
+                                <span class="fs-field-error" id="error-name">${getFieldError('name', data)}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="fs-field-row">
+                            <label>Passport</label>
+                            <div class="fs-field-input">
+                                <input type="text" id="preview-number" value="${Utils.escapeHtml(data.number)}" class="${getFieldClass('number', data)}">
+                                <span class="fs-field-error" id="error-number">${getFieldError('number', data)}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="fs-field-row">
+                            <label>IIN</label>
+                            <div class="fs-field-input">
+                                <input type="text" id="preview-iin" value="${Utils.escapeHtml(data.iin)}" maxlength="12" class="${getIINClass(data.iin)}">
+                                <span class="fs-field-error" id="error-iin">${getIINError(data.iin)}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="fs-field-row">
+                            <label>Birth Date</label>
+                            <div class="fs-field-input">
+                                <input type="text" id="preview-birth" value="${Utils.escapeHtml(data.birthDate)}" placeholder="DD.MM.YYYY" class="${getFieldClass('birthDate', data)}">
+                                <span class="fs-field-error" id="error-birth">${getFieldError('birthDate', data)}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="fs-field-row">
+                            <label>Valid Until</label>
+                            <div class="fs-field-input">
+                                <input type="text" id="preview-valid" value="${Utils.escapeHtml(data.validDate)}" placeholder="DD.MM.YYYY" class="${getValidDateClass(data.validDate)}">
+                                <span class="fs-field-error" id="error-valid">${getValidDateError(data.validDate)}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="fs-field-row">
+                            <label>Gender</label>
+                            <div class="fs-field-input">
+                                <select id="preview-gender">
+                                    <option value="1" ${data.gender === '1' ? 'selected' : ''}>Male</option>
+                                    <option value="0" ${data.gender === '0' ? 'selected' : ''}>Female</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="fs-field-row">
+                            <label>Email</label>
+                            <div class="fs-field-input">
+                                <input type="email" id="preview-email" value="${Utils.escapeHtml(data.email || '')}" class="${getEmailClass(data.email)}">
+                                <span class="fs-field-error" id="error-email">${getEmailError(data.email)}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="fs-field-row">
+                            <label>Phone</label>
+                            <div class="fs-field-input">
+                                <input type="text" id="preview-phone" value="${Utils.escapeHtml(data.phone || '')}">
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="fs-modal-footer">
                     <button class="fs-btn fs-btn-cancel">Cancel</button>
-                    <button class="fs-btn fs-btn-fill">Fill Form</button>
+                    <button class="fs-btn fs-btn-fill" ${!validation.isValid ? 'disabled' : ''}>Fill Form</button>
                 </div>
             </div>
         `;
@@ -349,19 +404,28 @@
 
         Utils.$('.fs-modal-close', modal).addEventListener('click', () => closeModal());
         Utils.$('.fs-btn-cancel', modal).addEventListener('click', () => closeModal());
-        Utils.$('.fs-btn-fill', modal).addEventListener('click', () => {
+        
+        const fillBtn = Utils.$('.fs-btn-fill', modal);
+        fillBtn.addEventListener('click', () => {
             const editedData = {
                 ...data,
-                surname: Utils.$('#preview-surname').value,
-                name: Utils.$('#preview-name').value,
-                number: Utils.$('#preview-number').value,
-                iin: Utils.$('#preview-iin').value,
-                birthDate: Utils.$('#preview-birth').value,
-                validDate: Utils.$('#preview-valid').value,
+                surname: Utils.$('#preview-surname').value.trim(),
+                name: Utils.$('#preview-name').value.trim(),
+                number: Utils.$('#preview-number').value.trim(),
+                iin: Utils.$('#preview-iin').value.trim(),
+                birthDate: Utils.$('#preview-birth').value.trim(),
+                validDate: Utils.$('#preview-valid').value.trim(),
                 gender: Utils.$('#preview-gender').value,
-                email: Utils.$('#preview-email').value,
-                phone: Utils.$('#preview-phone').value
+                email: Utils.$('#preview-email').value.trim(),
+                phone: Utils.$('#preview-phone').value.trim()
             };
+            
+            const newValidation = validatePassportData(editedData);
+            if (!newValidation.isValid) {
+                updateModalValidation(modal, editedData, newValidation);
+                return;
+            }
+            
             closeModal();
             fillFormSequentially(editedData, touristIndex, zoneElement);
         });
@@ -369,6 +433,134 @@
         modal.addEventListener('click', (e) => {
             if (e.target === modal) closeModal();
         });
+        
+        addModalInputListeners(modal);
+    }
+    
+    function addModalInputListeners(modal) {
+        const iinInput = Utils.$('#preview-iin', modal);
+        if (iinInput) {
+            iinInput.addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '').slice(0, 12);
+                const errorEl = Utils.$('#error-iin', modal);
+                this.className = getIINClass(this.value);
+                if (errorEl) errorEl.textContent = getIINError(this.value);
+            });
+        }
+        
+        const validInput = Utils.$('#preview-valid', modal);
+        if (validInput) {
+            validInput.addEventListener('input', function() {
+                const errorEl = Utils.$('#error-valid', modal);
+                this.className = getValidDateClass(this.value);
+                if (errorEl) errorEl.textContent = getValidDateError(this.value);
+            });
+        }
+        
+        const emailInput = Utils.$('#preview-email', modal);
+        if (emailInput) {
+            emailInput.addEventListener('input', function() {
+                const errorEl = Utils.$('#error-email', modal);
+                this.className = getEmailClass(this.value);
+                if (errorEl) errorEl.textContent = getEmailError(this.value);
+            });
+        }
+    }
+    
+    function updateModalValidation(modal, data, validation) {
+        const summary = Utils.$('.fs-validation-summary', modal);
+        if (summary) {
+            summary.className = 'fs-validation-summary ' + (validation.isValid ? 'success' : 'error');
+            summary.innerHTML = '<span class="fs-validation-icon">' + (validation.isValid ? '✓' : '!') + '</span>' +
+                '<span>' + (validation.isValid ? 'Data looks good' : 'Please check highlighted fields') + '</span>';
+        }
+        
+        const surnameInput = Utils.$('#preview-surname', modal);
+        if (surnameInput) {
+            surnameInput.className = getFieldClass('surname', data);
+            const errorEl = Utils.$('#error-surname', modal);
+            if (errorEl) errorEl.textContent = getFieldError('surname', data);
+        }
+        
+        const nameInput = Utils.$('#preview-name', modal);
+        if (nameInput) {
+            nameInput.className = getFieldClass('name', data);
+            const errorEl = Utils.$('#error-name', modal);
+            if (errorEl) errorEl.textContent = getFieldError('name', data);
+        }
+        
+        const numberInput = Utils.$('#preview-number', modal);
+        if (numberInput) {
+            numberInput.className = getFieldClass('number', data);
+            const errorEl = Utils.$('#error-number', modal);
+            if (errorEl) errorEl.textContent = getFieldError('number', data);
+        }
+        
+        const fillBtn = Utils.$('.fs-btn-fill', modal);
+        if (fillBtn) fillBtn.disabled = !validation.isValid;
+    }
+    
+    function getFieldClass(field, data) {
+        const value = data[field];
+        if (!value || value.length < 2) return 'error';
+        return 'success';
+    }
+    
+    function getFieldError(field, data) {
+        const value = data[field];
+        if (!value) return 'Required field';
+        if (value.length < 2) return 'Too short';
+        return '';
+    }
+    
+    function getIINClass(iin) {
+        if (!iin) return 'error';
+        if (iin.length !== 12) return 'warning';
+        if (!PassportParser.validateIIN(iin)) return 'error';
+        return 'success';
+    }
+    
+    function getIINError(iin) {
+        if (!iin) return 'Required for KZ citizens';
+        if (iin.length !== 12) return 'Must be 12 digits';
+        if (!PassportParser.validateIIN(iin)) return 'Invalid checksum';
+        return '';
+    }
+    
+    function getValidDateClass(dateStr) {
+        if (!dateStr) return 'error';
+        const parts = dateStr.split('.');
+        if (parts.length !== 3) return 'error';
+        const date = new Date(parts[2], parts[1] - 1, parts[0]);
+        const now = new Date();
+        const months = (date - now) / (1000 * 60 * 60 * 24 * 30);
+        if (months < 0) return 'error';
+        if (months < 6) return 'warning';
+        return 'success';
+    }
+    
+    function getValidDateError(dateStr) {
+        if (!dateStr) return 'Required';
+        const parts = dateStr.split('.');
+        if (parts.length !== 3) return 'Invalid format (DD.MM.YYYY)';
+        const date = new Date(parts[2], parts[1] - 1, parts[0]);
+        const now = new Date();
+        const months = (date - now) / (1000 * 60 * 60 * 24 * 30);
+        if (months < 0) return 'PASSPORT EXPIRED!';
+        if (months < 6) return 'Expires soon (< 6 months)';
+        return '';
+    }
+    
+    function getEmailClass(email) {
+        if (!email) return '';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'warning';
+        return 'success';
+    }
+    
+    function getEmailError(email) {
+        if (!email) return '';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Invalid email format';
+        return '';
     }
 
     /**

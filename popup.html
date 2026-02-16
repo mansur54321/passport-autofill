@@ -3,208 +3,194 @@
 <head>
   <meta charset="utf-8">
   <style>
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     
     body { 
-      width: 360px; 
-      min-height: 400px;
-      padding: 0;
-      margin: 0;
+      width: 380px; 
+      min-height: 450px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-      background: #f9f9f9; 
+      background: #f5f7fa; 
     }
     
+    /* Tabs */
     .tabs {
       display: flex;
-      background: #366383;
+      background: linear-gradient(135deg, #366383 0%, #2d5270 100%);
     }
     
     .tab {
       flex: 1;
-      padding: 12px;
+      padding: 12px 8px;
       text-align: center;
       color: rgba(255,255,255,0.7);
       cursor: pointer;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       border-bottom: 3px solid transparent;
       transition: all 0.2s;
     }
     
-    .tab:hover {
-      color: #fff;
-      background: rgba(255,255,255,0.1);
-    }
+    .tab:hover { color: #fff; background: rgba(255,255,255,0.1); }
+    .tab.active { color: #fff; border-bottom-color: #4fc3f7; }
     
-    .tab.active {
-      color: #fff;
-      border-bottom-color: #fff;
-    }
-    
-    .tab-content {
-      display: none;
-      padding: 15px;
-    }
-    
-    .tab-content.active {
-      display: block;
-    }
+    .tab-content { display: none; padding: 15px; }
+    .tab-content.active { display: block; }
     
     h3 { 
-      margin: 0 0 15px 0; 
+      margin: 0 0 12px 0; 
       color: #366383; 
-      font-size: 16px; 
-      border-bottom: 1px solid #e0e0e0;
-      padding-bottom: 10px;
+      font-size: 15px; 
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     
-    .form-group { 
-      margin-bottom: 12px; 
+    h3::before {
+      content: '';
+      width: 4px;
+      height: 16px;
+      background: #366383;
+      border-radius: 2px;
     }
+    
+    /* Form elements */
+    .form-group { margin-bottom: 12px; }
     
     label { 
       display: block; 
-      font-size: 12px; 
+      font-size: 11px; 
       margin-bottom: 4px; 
       font-weight: 600; 
-      color: #333;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     
-    input[type="email"],
-    input[type="text"] { 
+    input, select { 
       width: 100%; 
-      padding: 8px 10px; 
-      border: 1px solid #ccc; 
-      border-radius: 4px; 
+      padding: 10px 12px;
+      border: 2px solid #e0e5ec;
+      border-radius: 8px;
       font-size: 13px;
-      transition: border-color 0.2s;
+      transition: all 0.2s;
+      background: #fff;
     }
     
-    input:focus {
+    input:focus, select:focus {
       outline: none;
       border-color: #366383;
+      box-shadow: 0 0 0 3px rgba(54,99,131,0.1);
     }
     
-    input.error {
-      border-color: #dc3545;
-    }
+    input.error { border-color: #ef5350; background: #ffebee; }
+    input.success { border-color: #66bb6a; background: #e8f5e9; }
+    input.warning { border-color: #ffa726; background: #fff3e0; }
     
-    .error-msg {
-      color: #dc3545;
-      font-size: 11px;
+    .field-hint {
+      font-size: 10px;
+      color: #888;
       margin-top: 3px;
-      display: none;
     }
     
+    .field-error {
+      font-size: 11px;
+      color: #d32f2f;
+      margin-top: 4px;
+      display: none;
+      font-weight: 500;
+    }
+    
+    .field-error.show { display: block; }
+    
+    /* Buttons */
+    button { 
+      width: 100%; 
+      padding: 10px 16px;
+      background: #366383;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    
+    button:hover { background: #2d5270; transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    button:disabled { background: #adb5bd; cursor: not-allowed; transform: none; }
+    
+    button.secondary { background: #78909c; }
+    button.secondary:hover { background: #607d8b; }
+    
+    button.success { background: #43a047; }
+    button.success:hover { background: #388e3c; }
+    
+    /* Checkbox */
     .checkbox-group {
       display: flex;
       align-items: center;
-      margin-bottom: 15px;
+      margin-bottom: 12px;
+      padding: 8px;
+      background: #fff;
+      border-radius: 8px;
+      border: 1px solid #e0e5ec;
     }
     
     .checkbox-group input[type="checkbox"] {
-      margin-right: 8px;
+      width: 18px;
+      height: 18px;
+      margin-right: 10px;
     }
     
     .checkbox-group label {
-      margin-bottom: 0;
+      margin: 0;
       font-weight: normal;
       cursor: pointer;
+      text-transform: none;
     }
     
-    button { 
-      width: 100%; 
-      padding: 10px; 
-      background-color: #366383; 
-      color: white; 
-      border: none; 
-      border-radius: 4px; 
-      cursor: pointer; 
-      font-weight: 600;
-      font-size: 13px;
-      transition: background-color 0.2s;
-    }
-    
-    button:hover { 
-      background-color: #2d5270; 
-    }
-    
-    button:disabled {
-      background-color: #adb5bd;
-      cursor: not-allowed;
-    }
-    
-    button.secondary {
-      background-color: #6c757d;
-      margin-top: 10px;
-    }
-    
-    button.secondary:hover {
-      background-color: #5a6268;
-    }
-    
-    button.danger {
-      background-color: #dc3545;
-    }
-    
-    button.danger:hover {
-      background-color: #c82333;
-    }
-    
+    /* Messages */
     .msg { 
-      font-size: 12px; 
-      color: #155724; 
-      background: #d4edda;
-      display: none; 
-      text-align: center; 
-      margin-top: 10px; 
-      padding: 8px;
-      border-radius: 4px;
+      font-size: 12px;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+      display: none;
     }
     
-    .update-section {
-      margin-top: 15px;
-      padding-top: 10px;
-      border-top: 1px solid #e0e0e0;
-    }
+    .msg.success { background: #d4edda; color: #155724; display: block; }
+    .msg.error { background: #f8d7da; color: #721c24; display: block; }
+    .msg.info { background: #e3f2fd; color: #1565c0; display: block; }
     
+    /* Update section */
     .update-status {
       padding: 10px;
-      border-radius: 4px;
+      border-radius: 8px;
       font-size: 12px;
-      margin-bottom: 10px;
-    }
-    
-    .update-status.checking { background: #fff3cd; color: #856404; }
-    .update-status.available { background: #d4edda; color: #155724; }
-    .update-status.uptodate { background: #e7f3ff; color: #004085; }
-    .update-status.error { background: #f8d7da; color: #721c24; }
-    
-    .changelog {
-      background: #f8f9fa;
-      border-radius: 4px;
-      padding: 10px;
       margin-top: 10px;
-      font-size: 11px;
+      display: none;
     }
     
-    .changelog h4 { margin: 0 0 8px 0; font-size: 12px; color: #333; }
-    .changelog ul { margin: 0; padding-left: 16px; color: #555; }
-    .changelog li { margin-bottom: 4px; }
+    .update-status.checking { display: block; background: #fff3cd; color: #856404; }
+    .update-status.available { display: block; background: #d4edda; color: #155724; }
+    .update-status.uptodate { display: block; background: #e3f2fd; color: #1565c0; }
+    .update-status.error { display: block; background: #f8d7da; color: #721c24; }
     
+    /* Version info */
     .version-info {
       margin-top: 15px;
       padding-top: 10px;
-      border-top: 1px solid #e0e0e0;
+      border-top: 1px solid #e0e5ec;
       font-size: 11px;
-      color: #666;
+      color: #888;
       text-align: center;
     }
     
     .version-info a { color: #366383; text-decoration: none; }
     .version-info a:hover { text-decoration: underline; }
     
-    /* History Tab */
+    /* History */
     .history-header {
       display: flex;
       justify-content: space-between;
@@ -212,39 +198,35 @@
       margin-bottom: 10px;
     }
     
-    .history-stats {
-      font-size: 11px;
-      color: #666;
-    }
+    .history-stats { font-size: 11px; color: #888; }
     
     .history-list {
-      max-height: 350px;
+      max-height: 320px;
       overflow-y: auto;
     }
     
     .history-item {
       background: #fff;
-      border: 1px solid #e0e0e0;
-      border-radius: 6px;
-      padding: 10px;
+      border-radius: 10px;
+      padding: 12px;
       margin-bottom: 8px;
-      font-size: 12px;
+      border: 1px solid #e0e5ec;
+      transition: all 0.2s;
     }
     
-    .history-item:hover {
-      border-color: #366383;
-    }
+    .history-item:hover { border-color: #366383; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
     
     .history-item-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
     
     .history-item-site {
       font-weight: 600;
       color: #366383;
+      font-size: 12px;
     }
     
     .history-item-time {
@@ -254,152 +236,170 @@
     
     .history-item-data {
       display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 2px 8px;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 12px;
       font-size: 11px;
     }
     
-    .history-item-data dt {
-      color: #666;
-    }
-    
-    .history-item-data dd {
-      color: #333;
-      font-weight: 500;
-    }
+    .history-item-data dt { color: #888; }
+    .history-item-data dd { color: #333; font-weight: 500; }
     
     .history-item-status {
-      margin-top: 6px;
-      padding: 4px 8px;
+      display: inline-block;
+      padding: 3px 8px;
       border-radius: 4px;
       font-size: 10px;
       font-weight: 600;
+      margin-top: 8px;
     }
     
-    .history-item-status.success {
-      background: #d4edda;
-      color: #155724;
-    }
-    
-    .history-item-status.warning {
-      background: #fff3cd;
-      color: #856404;
-    }
-    
-    .history-item-status.error {
-      background: #f8d7da;
-      color: #721c24;
-    }
+    .history-item-status.success { background: #e8f5e9; color: #2e7d32; }
+    .history-item-status.warning { background: #fff3e0; color: #ef6c00; }
+    .history-item-status.error { background: #ffebee; color: #c62828; }
     
     .history-empty {
       text-align: center;
-      padding: 40px 20px;
-      color: #999;
+      padding: 40px;
+      color: #aaa;
     }
     
-    .history-empty-icon {
-      font-size: 48px;
-      margin-bottom: 10px;
-    }
+    .history-empty-icon { font-size: 40px; margin-bottom: 10px; }
     
-    /* Tools Tab */
-    .tools-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-    
-    .tool-card {
+    /* Tools */
+    .tool-panel {
       background: #fff;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 12px;
+      border: 1px solid #e0e5ec;
+    }
+    
+    .tool-panel h4 {
+      font-size: 13px;
+      color: #333;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .tool-result {
       padding: 12px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s;
+      border-radius: 8px;
+      font-size: 12px;
+      margin-top: 10px;
+      display: none;
     }
     
-    .tool-card:hover {
-      border-color: #366383;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
+    .tool-result.show { display: block; }
+    .tool-result.success { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+    .tool-result.error { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+    .tool-result.warning { background: #fff3e0; color: #ef6c00; border: 1px solid #ffcc80; }
+    .tool-result.info { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
     
-    .tool-card-icon {
-      font-size: 24px;
+    .tool-result-title {
+      font-weight: 600;
       margin-bottom: 6px;
     }
     
-    .tool-card-title {
-      font-size: 12px;
-      font-weight: 600;
-      color: #333;
+    .tool-result-data {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 4px 12px;
     }
     
-    .tool-card-desc {
-      font-size: 10px;
+    .tool-result-data dt { color: #666; }
+    .tool-result-data dd { font-weight: 500; }
+    
+    .btn-row {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .btn-row button { flex: 1; }
+    
+    .copy-btn {
+      padding: 6px 10px;
+      background: #f5f7fa;
+      border: 1px solid #e0e5ec;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
       color: #666;
-      margin-top: 4px;
+      width: auto;
     }
     
+    .copy-btn:hover { background: #e0e5ec; }
+    
+    /* Quick actions */
     .quick-actions {
       background: #fff;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
+      border-radius: 12px;
       padding: 12px;
-      margin-bottom: 15px;
+      border: 1px solid #e0e5ec;
+      margin-bottom: 12px;
     }
     
     .quick-actions h4 {
-      margin: 0 0 10px 0;
-      font-size: 13px;
-      color: #333;
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     
-    .quick-action-btn {
-      display: block;
+    .quick-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       width: 100%;
-      padding: 8px;
-      margin-bottom: 6px;
+      padding: 10px;
       background: #f8f9fa;
-      border: 1px solid #e0e0e0;
-      border-radius: 4px;
+      border: 1px solid #e0e5ec;
+      border-radius: 8px;
       font-size: 12px;
       color: #333;
       cursor: pointer;
+      margin-bottom: 6px;
       text-align: left;
     }
     
-    .quick-action-btn:hover {
-      background: #e9ecef;
-    }
+    .quick-btn:last-child { margin-bottom: 0; }
+    .quick-btn:hover { background: #e9ecef; }
+    .quick-btn-icon { font-size: 16px; }
     
-    .quick-action-btn:last-child {
-      margin-bottom: 0;
-    }
-    
-    .info-section {
-      background: #fff3cd;
-      border: 1px solid #ffc107;
-      border-radius: 8px;
+    /* Tips */
+    .tips-box {
+      background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+      border-radius: 12px;
       padding: 12px;
-      font-size: 11px;
-      color: #856404;
+      border: 1px solid #ffe082;
     }
     
-    .info-section h4 {
-      margin: 0 0 6px 0;
+    .tips-box h4 {
       font-size: 12px;
+      color: #f57c00;
+      margin-bottom: 8px;
     }
     
-    .info-section ul {
+    .tips-box ul {
       margin: 0;
       padding-left: 16px;
+      font-size: 11px;
+      color: #666;
     }
     
-    .info-section li {
-      margin-bottom: 4px;
+    .tips-box li { margin-bottom: 4px; }
+    
+    /* Section divider */
+    .section-title {
+      font-size: 11px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 15px 0 10px 0;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #e0e5ec;
     }
   </style>
 </head>
@@ -415,15 +415,16 @@
     <h3>Default Settings</h3>
     
     <div class="form-group">
-      <label for="email">Email:</label>
+      <label for="email">Email</label>
       <input type="email" id="email" placeholder="agent@mail.ru">
-      <div id="email-error" class="error-msg"></div>
+      <div id="email-error" class="field-error"></div>
     </div>
     
     <div class="form-group">
-      <label for="phone">Phone:</label>
+      <label for="phone">Phone</label>
       <input type="text" id="phone" placeholder="7771234567">
-      <div id="phone-error" class="error-msg"></div>
+      <div class="field-hint">10-12 digits without spaces</div>
+      <div id="phone-error" class="field-error"></div>
     </div>
 
     <div class="checkbox-group">
@@ -431,18 +432,16 @@
       <label for="autoFill">Auto-fill without preview</label>
     </div>
     
-    <button id="saveBtn">Save</button>
-    <div id="msg" class="msg">Saved!</div>
+    <button id="saveBtn">Save Settings</button>
+    <div id="msg" class="msg"></div>
     
-    <div class="update-section">
-      <button id="checkUpdateBtn" class="secondary">Check for Updates</button>
-      <div id="updateStatus" class="update-status" style="display:none;"></div>
-      <div id="changelog" class="changelog" style="display:none;"></div>
-    </div>
+    <div class="section-title">Updates</div>
+    
+    <button id="checkUpdateBtn" class="secondary">Check for Updates</button>
+    <div id="updateStatus" class="update-status"></div>
     
     <div class="version-info">
-      Version: <span id="version">-</span><br>
-      <a href="https://github.com/mansur54321/passport-autofill" target="_blank">GitHub</a> | 
+      Version <span id="version">-</span> | 
       <a href="https://github.com/mansur54321/passport-autofill/releases" target="_blank">Releases</a>
     </div>
   </div>
@@ -451,66 +450,90 @@
   <div id="history" class="tab-content">
     <div class="history-header">
       <h3>Fill History</h3>
-      <div class="history-stats">
-        <span id="historyCount">0</span> operations
-      </div>
+      <div class="history-stats"><span id="historyCount">0</span> operations</div>
     </div>
     
     <div id="historyList" class="history-list">
       <div class="history-empty">
         <div class="history-empty-icon">📋</div>
         <div>No history yet</div>
-        <div style="font-size:11px;margin-top:4px;">Drop a passport PDF to get started</div>
       </div>
     </div>
     
-    <button id="clearHistoryBtn" class="secondary danger" style="margin-top:10px;">Clear History</button>
+    <div class="btn-row" style="margin-top:12px;">
+      <button id="exportHistoryBtn" class="secondary">Export CSV</button>
+      <button id="clearHistoryBtn" class="secondary" style="background:#ef5350;">Clear</button>
+    </div>
   </div>
   
   <!-- Tools Tab -->
   <div id="tools" class="tab-content">
-    <h3>Quick Tools</h3>
+    <h3>Travel Agent Tools</h3>
     
-    <div class="tools-grid">
-      <div class="tool-card" id="toolIinCheck">
-        <div class="tool-card-icon">🔍</div>
-        <div class="tool-card-title">IIN Validator</div>
-        <div class="tool-card-desc">Check IIN checksum</div>
+    <!-- IIN Validator -->
+    <div class="tool-panel">
+      <h4>🔍 IIN Validator</h4>
+      <div class="form-group">
+        <label for="iinInput">IIN (12 digits)</label>
+        <input type="text" id="iinInput" placeholder="000000000000" maxlength="12">
       </div>
-      
-      <div class="tool-card" id="toolPassportCheck">
-        <div class="tool-card-icon">🛂</div>
-        <div class="tool-card-title">Passport Validity</div>
-        <div class="tool-card-desc">Check expiry date</div>
-      </div>
-      
-      <div class="tool-card" id="toolCalculator">
-        <div class="tool-card-icon">🧮</div>
-        <div class="tool-card-title">Age Calculator</div>
-        <div class="tool-card-desc">From birth date</div>
-      </div>
-      
-      <div class="tool-card" id="toolTranslit">
-        <div class="tool-card-icon">🔤</div>
-        <div class="tool-card-title">Transliteration</div>
-        <div class="tool-card-desc">Cyrillic to Latin</div>
-      </div>
+      <button id="validateIinBtn">Validate IIN</button>
+      <div id="iinResult" class="tool-result"></div>
     </div>
     
+    <!-- Passport Checker -->
+    <div class="tool-panel">
+      <h4>🛂 Passport Validity</h4>
+      <div class="form-group">
+        <label for="passportExpiry">Expiry Date</label>
+        <input type="text" id="passportExpiry" placeholder="DD.MM.YYYY">
+      </div>
+      <button id="checkPassportBtn">Check Validity</button>
+      <div id="passportResult" class="tool-result"></div>
+    </div>
+    
+    <!-- Age Calculator -->
+    <div class="tool-panel">
+      <h4>🎂 Age Calculator</h4>
+      <div class="form-group">
+        <label for="birthDateInput">Birth Date</label>
+        <input type="text" id="birthDateInput" placeholder="DD.MM.YYYY">
+      </div>
+      <button id="calcAgeBtn">Calculate Age</button>
+      <div id="ageResult" class="tool-result"></div>
+    </div>
+    
+    <!-- Transliteration -->
+    <div class="tool-panel">
+      <h4>🔤 Transliteration</h4>
+      <div class="form-group">
+        <label for="cyrillicInput">Cyrillic Text</label>
+        <input type="text" id="cyrillicInput" placeholder="Иванов Иван">
+      </div>
+      <button id="translitBtn">Transliterate</button>
+      <div id="translitResult" class="tool-result"></div>
+    </div>
+    
+    <!-- Quick Actions -->
     <div class="quick-actions">
       <h4>Quick Actions</h4>
-      <button class="quick-action-btn" id="actionCopyEmail">Copy default email</button>
-      <button class="quick-action-btn" id="actionCopyPhone">Copy default phone</button>
-      <button class="quick-action-btn" id="actionExportHistory">Export history to CSV</button>
+      <button class="quick-btn" id="copyEmailBtn">
+        <span class="quick-btn-icon">📧</span>
+        <span>Copy default email</span>
+      </button>
+      <button class="quick-btn" id="copyPhoneBtn">
+        <span class="quick-btn-icon">📱</span>
+        <span>Copy default phone</span>
+      </button>
     </div>
     
-    <div class="info-section">
-      <h4>💡 Tips for Travel Agents</h4>
+    <!-- Tips -->
+    <div class="tips-box">
+      <h4>💡 Tips</h4>
       <ul>
-        <li>Drag & drop PDF passport directly to tourist fields</li>
-        <li>Check passport validity before booking</li>
-        <li>IIN must be valid for Kazakhstan citizens</li>
-        <li>Passport should be valid 6+ months after trip end</li>
+        <li>Passport must be valid 6+ months after trip</li>
+        <li>IIN contains birth date and gender info</li>
+        <li>CHD = Child (2-17), INF = Infant (0-2)</li>
       </ul>
     </div>
   </div>
