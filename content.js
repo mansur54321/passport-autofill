@@ -47,6 +47,34 @@
     }
 
     /**
+     * Finds the legend container for a tourist element
+     * Different sites have different DOM structures
+     * @param {Element} touristDiv - Tourist div element
+     * @returns {Element|null}
+     */
+    function findLegendContainer(touristDiv) {
+        const parentFieldset = touristDiv.parentElement;
+        if (parentFieldset) {
+            const legend = Utils.$('.legend-tag', parentFieldset);
+            if (legend) return legend;
+        }
+
+        const closestFieldset = touristDiv.closest('fieldset.panel');
+        if (closestFieldset) {
+            const legend = Utils.$('.legend-tag', closestFieldset);
+            if (legend) return legend;
+        }
+
+        const anyFieldset = touristDiv.closest('fieldset');
+        if (anyFieldset) {
+            const legend = Utils.$('.legend-tag', anyFieldset);
+            if (legend) return legend;
+        }
+
+        return null;
+    }
+
+    /**
      * Initializes drop zones for passport upload
      */
     function initDropZones() {
@@ -61,16 +89,58 @@
 
         touristDivs.forEach((touristDiv) => {
             const touristIndex = touristDiv.dataset.peopleinc;
-            const fieldset = touristDiv.closest('fieldset');
-            if (!fieldset) return;
-            
-            const legend = Utils.$('.legend-tag', fieldset);
-            if (!legend) return;
+            if (!touristIndex) return;
 
-            if (Utils.$('.fs-passport-dropzone', legend)) return;
+            if (Utils.$('.fs-passport-dropzone', touristDiv.parentElement)) return;
 
-            createZoneForTourist(legend, touristIndex);
+            const legend = findLegendContainer(touristDiv);
+            if (legend) {
+                if (Utils.$('.fs-passport-dropzone', legend)) return;
+                createZoneForTourist(legend, touristIndex);
+            } else {
+                const container = touristDiv.parentElement;
+                if (container && !Utils.$('.fs-passport-dropzone', container)) {
+                    createZoneForTouristContainer(container, touristIndex);
+                }
+            }
         });
+    }
+
+    /**
+     * Creates drop zone directly in container (fallback)
+     * @param {Element} container - Container element
+     * @param {string} index - Tourist index
+     */
+    function createZoneForTouristContainer(container, index) {
+        const div = document.createElement('div');
+        div.className = 'fs-passport-dropzone';
+        div.innerHTML = '<span>Passport PDF</span><span class="fs-status-text">Drag and drop here</span>';
+        div.style.marginBottom = '10px';
+
+        div.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            div.classList.add('dragover');
+        });
+
+        div.addEventListener('dragleave', () => {
+            div.classList.remove('dragover');
+        });
+
+        div.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            div.classList.remove('dragover');
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type === 'application/pdf') {
+                await handlePdf(file, index, div);
+            } else {
+                updateZoneStatus(div, 'Need PDF file!', 'red');
+            }
+        });
+
+        container.insertBefore(div, container.firstChild);
     }
 
     /**

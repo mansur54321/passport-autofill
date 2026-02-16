@@ -62,6 +62,79 @@
             var version = chrome.runtime.getManifest().version;
             versionEl.textContent = version;
         }
+
+        loadUpdateStatus();
+    }
+
+    function loadUpdateStatus() {
+        chrome.runtime.sendMessage({ action: 'getUpdateStatus' }, function(status) {
+            if (status) {
+                displayUpdateStatus(status);
+            }
+        });
+    }
+
+    function displayUpdateStatus(status) {
+        var statusEl = document.getElementById('updateStatus');
+        var changelogEl = document.getElementById('changelog');
+        
+        if (!statusEl) return;
+
+        statusEl.style.display = 'block';
+
+        if (status.error) {
+            statusEl.className = 'update-status error';
+            statusEl.innerHTML = '<strong>Error:</strong> ' + escapeHtml(status.error);
+            changelogEl.style.display = 'none';
+        } else if (status.hasUpdate) {
+            statusEl.className = 'update-status available';
+            statusEl.innerHTML = '<strong>Update available!</strong> v' + escapeHtml(status.latestVersion) + 
+                '<br><a href="https://github.com/mansur54321/passport-autofill/releases/latest" target="_blank">Download</a>';
+            
+            if (status.changelog && status.changelog.length > 0) {
+                showChangelog(status.changelog);
+            }
+        } else if (status.latestVersion) {
+            statusEl.className = 'update-status uptodate';
+            statusEl.innerHTML = '<strong>Up to date!</strong> v' + escapeHtml(status.latestVersion);
+            changelogEl.style.display = 'none';
+        }
+
+        if (status.lastCheck) {
+            var lastCheck = new Date(status.lastCheck);
+            var timeAgo = getTimeAgo(lastCheck);
+            statusEl.innerHTML += '<br><small>Last check: ' + timeAgo + '</small>';
+        }
+    }
+
+    function showChangelog(items) {
+        var changelogEl = document.getElementById('changelog');
+        if (!changelogEl || !items || items.length === 0) return;
+
+        var html = '<h4>What\'s new:</h4><ul>';
+        for (var i = 0; i < items.length; i++) {
+            html += '<li>' + escapeHtml(items[i]) + '</li>';
+        }
+        html += '</ul>';
+        
+        changelogEl.innerHTML = html;
+        changelogEl.style.display = 'block';
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function getTimeAgo(date) {
+        var seconds = Math.floor((new Date() - date) / 1000);
+        
+        if (seconds < 60) return 'just now';
+        if (seconds < 3600) return Math.floor(seconds / 60) + ' min ago';
+        if (seconds < 86400) return Math.floor(seconds / 3600) + ' hours ago';
+        return Math.floor(seconds / 86400) + ' days ago';
     }
 
     function saveSettings() {
@@ -104,15 +177,27 @@
 
     function checkForUpdate() {
         var btn = document.getElementById('checkUpdateBtn');
+        var statusEl = document.getElementById('updateStatus');
+        var changelogEl = document.getElementById('changelog');
         var originalText = btn.textContent;
+
         btn.textContent = 'Checking...';
         btn.disabled = true;
+        
+        statusEl.className = 'update-status checking';
+        statusEl.innerHTML = 'Checking for updates...';
+        statusEl.style.display = 'block';
+        changelogEl.style.display = 'none';
 
         chrome.runtime.sendMessage({ action: 'checkUpdate' }, function(response) {
             setTimeout(function() {
                 btn.textContent = originalText;
                 btn.disabled = false;
-            }, 1000);
+                
+                if (response) {
+                    displayUpdateStatus(response);
+                }
+            }, 1500);
         });
     }
 
