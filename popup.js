@@ -190,14 +190,15 @@
         changelogEl.style.display = 'none';
 
         chrome.runtime.sendMessage({ action: 'checkUpdate' }, function(response) {
-            setTimeout(function() {
-                btn.textContent = originalText;
-                btn.disabled = false;
-                
-                if (response) {
-                    displayUpdateStatus(response);
-                }
-            }, 1500);
+            btn.textContent = originalText;
+            btn.disabled = false;
+            
+            if (response) {
+                displayUpdateStatus(response);
+            } else {
+                statusEl.className = 'update-status error';
+                statusEl.innerHTML = '<strong>Error:</strong> No response from background';
+            }
         });
     }
 

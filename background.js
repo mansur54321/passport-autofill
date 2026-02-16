@@ -180,10 +180,44 @@
 
     chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
         if (message.action === 'checkUpdate') {
-            checkForUpdates(true);
-            setTimeout(function() {
-                loadUpdateStatus(sendResponse);
-            }, 2000);
+            updateStatus.error = null;
+            
+            fetch(GITHUB_API_URL)
+                .then(function(response) {
+                    if (!response.ok) {
+                        if (response.status === 403) {
+                            throw new Error('GitHub API rate limit exceeded');
+                        }
+                        throw new Error('HTTP ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(function(data) {
+                    var latestVersion = data.tag_name;
+                    if (latestVersion && latestVersion.startsWith('v')) {
+                        latestVersion = latestVersion.substring(1);
+                    }
+
+                    log('Latest version: ' + latestVersion);
+
+                    updateStatus.lastCheck = new Date().toISOString();
+                    updateStatus.latestVersion = latestVersion;
+                    updateStatus.hasUpdate = compareVersions(latestVersion, currentVersion) > 0;
+                    updateStatus.error = null;
+                    updateStatus.changelog = parseChangelog(data.body);
+                    updateStatus.releaseUrl = data.html_url;
+
+                    saveUpdateStatus();
+                    sendResponse(updateStatus);
+                })
+                .catch(function(error) {
+                    log('Update check failed: ' + error.message);
+                    updateStatus.lastCheck = new Date().toISOString();
+                    updateStatus.error = error.message;
+                    saveUpdateStatus();
+                    sendResponse(updateStatus);
+                });
+            
             return true;
         }
         
@@ -197,7 +231,7 @@
             return true;
         }
         
-        return true;
+        return false;
     });
 
     log('Background service worker started. Version: ' + currentVersion);

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Passport AutoFill (Multi-Operator)",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "description": "Auto-fill passport data for Fstravel, Kompas, KazUnion (PDF Drag&Drop)",
   "permissions": ["activeTab", "storage", "scripting", "alarms", "notifications"],
   "host_permissions": [
