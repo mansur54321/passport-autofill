@@ -391,6 +391,89 @@
     
     .tips-box li { margin-bottom: 4px; }
     
+    /* Currency Rates */
+    .currency-rates {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    
+    .currency-item {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      border: 1px solid #e0e5ec;
+    }
+    
+    .currency-item-code {
+      font-weight: 700;
+      color: #366383;
+      font-size: 14px;
+    }
+    
+    .currency-item-rate {
+      font-size: 16px;
+      color: #333;
+      margin-top: 4px;
+    }
+    
+    .currency-loading {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 20px;
+      color: #888;
+    }
+    
+    .currency-error {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 20px;
+      color: #c62828;
+    }
+    
+    .currency-date {
+      grid-column: 1 / -1;
+      font-size: 10px;
+      color: #888;
+      text-align: center;
+      margin-top: 5px;
+    }
+    
+    /* Quick Convert */
+    .quick-convert {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .quick-convert-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .qc-currency {
+      width: 40px;
+      font-weight: 700;
+      color: #366383;
+      font-size: 12px;
+    }
+    
+    .qc-input {
+      flex: 1;
+      padding: 8px 10px !important;
+      font-size: 13px !important;
+    }
+    
+    .qc-result {
+      min-width: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #2e7d32;
+      text-align: right;
+    }
+    
     /* Section divider */
     .section-title {
       font-size: 11px;
@@ -408,6 +491,7 @@
     <div class="tab active" data-tab="settings">Settings</div>
     <div class="tab" data-tab="history">History</div>
     <div class="tab" data-tab="tools">Tools</div>
+    <div class="tab" data-tab="price">Price</div>
   </div>
   
   <!-- Settings Tab -->
@@ -534,6 +618,73 @@
         <li>Passport must be valid 6+ months after trip</li>
         <li>IIN contains birth date and gender info</li>
         <li>CHD = Child (2-17), INF = Infant (0-2)</li>
+      </ul>
+    </div>
+  </div>
+  
+  <!-- Price Monitor Tab -->
+  <div id="price" class="tab-content">
+    <h3>Price Monitor</h3>
+    
+    <!-- Currency Rates -->
+    <div class="tool-panel">
+      <h4>💱 Currency Rates (FUN&SUN)</h4>
+      <div id="currencyRates" class="currency-rates">
+        <div class="currency-loading">Loading rates...</div>
+      </div>
+      <button id="refreshRatesBtn" class="secondary" style="margin-top:10px;">Refresh Rates</button>
+    </div>
+    
+    <!-- Price Calculator -->
+    <div class="tool-panel">
+      <h4>🧮 Price Calculator</h4>
+      <div class="form-group">
+        <label for="priceInput">Price</label>
+        <input type="text" id="priceInput" placeholder="1000">
+      </div>
+      <div class="form-group">
+        <label for="currencyFrom">From</label>
+        <select id="currencyFrom">
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+          <option value="RUB">RUB</option>
+          <option value="UZS">UZS</option>
+          <option value="KGS">KGS</option>
+          <option value="AZN">AZN</option>
+        </select>
+      </div>
+      <button id="calcPriceBtn">Convert to KZT</button>
+      <div id="priceResult" class="tool-result"></div>
+    </div>
+    
+    <!-- Quick Convert -->
+    <div class="quick-actions">
+      <h4>Quick Convert to KZT</h4>
+      <div class="quick-convert">
+        <div class="quick-convert-row">
+          <span class="qc-currency">USD</span>
+          <input type="number" id="quickUSD" placeholder="0" class="qc-input">
+          <span class="qc-result" id="quickUSDResult">= 0 KZT</span>
+        </div>
+        <div class="quick-convert-row">
+          <span class="qc-currency">EUR</span>
+          <input type="number" id="quickEUR" placeholder="0" class="qc-input">
+          <span class="qc-result" id="quickEURResult">= 0 KZT</span>
+        </div>
+        <div class="quick-convert-row">
+          <span class="qc-currency">RUB</span>
+          <input type="number" id="quickRUB" placeholder="0" class="qc-input">
+          <span class="qc-result" id="quickRUBResult">= 0 KZT</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="tips-box">
+      <h4>ℹ️ Info</h4>
+      <ul>
+        <li>Rates from fstravel.asia main page</li>
+        <li>Updated automatically on page load</li>
+        <li>For reference only - confirm with B2B</li>
       </ul>
     </div>
   </div>

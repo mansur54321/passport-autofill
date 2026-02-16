@@ -20,9 +20,104 @@
         error: null,
         changelog: null
     };
+    
+    var currencyRates = {
+        USD: 504.0,
+        EUR: 598.0,
+        RUB: 6.5,
+        UZS: 0.041,
+        KGS: 5.77,
+        AZN: 296.0,
+        date: null
+    };
 
     function log(message) {
         console.log('[PassportAutoFill] ' + message);
+    }
+
+    /* ==================== CURRENCY RATES ==================== */
+    
+    function fetchCurrencyRates() {
+        log('Fetching currency rates from fstravel.asia...');
+        
+        fetch('https://fstravel.asia/', {
+            method: 'GET',
+            headers: {
+                'Accept': 'text/html'
+            }
+        })
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
+            return response.text();
+        })
+        .then(function(html) {
+            parseCurrencyRates(html);
+        })
+        .catch(function(error) {
+            log('Failed to fetch currency rates: ' + error.message);
+            chrome.storage.local.get(['currencyRates'], function(res) {
+                if (res.currencyRates) {
+                    currencyRates = res.currencyRates;
+                }
+            });
+        });
+    }
+    
+    function parseCurrencyRates(html) {
+        try {
+            var ratesMatch = html.match(/<div class="currency-row-block"[^>]*>([\s\S]*?)<\/div>\s*<\/div>\s*<\/div>/i);
+            if (!ratesMatch) {
+                log('Currency block not found in HTML');
+                return;
+            }
+            
+            var currencyHtml = ratesMatch[1];
+            
+            var dateMatch = html.match(/(\d{2}\.\d{2}\.\d{4})/);
+            if (dateMatch) {
+                currencyRates.date = dateMatch[1];
+            }
+            
+            var patterns = [
+                { code: 'USD', regex: /1\s*USD[^\d]*(\d+\.?\d*)\s*KZT/i },
+                { code: 'EUR', regex: /1\s*EUR[^\d]*(\d+\.?\d*)\s*KZT/i },
+                { code: 'RUB', regex: /1\s*RUB[^\d]*(\d+\.?\d*)\s*KZT/i },
+                { code: 'UZS', regex: /1\s*EUR[^\d]*(\d+\.?\d*)\s*UZS/i },
+                { code: 'KGS', regex: /1\s*USD[^\d]*(\d+\.?\d*)\s*KGS/i },
+                { code: 'AZN', regex: /1\s*USD[^\d]*(\d+\.?\d*)\s*AZN/i }
+            ];
+            
+            patterns.forEach(function(item) {
+                var match = currencyHtml.match(item.regex);
+                if (match) {
+                    var rate = parseFloat(match[1]);
+                    if (item.code === 'UZS') {
+                        currencyRates.UZS = 1 / (rate / currencyRates.EUR);
+                    } else if (item.code === 'KGS') {
+                        currencyRates.KGS = currencyRates.USD / rate;
+                    } else if (item.code === 'AZN') {
+                        currencyRates.AZN = currencyRates.USD / rate;
+                    } else {
+                        currencyRates[item.code] = rate;
+                    }
+                }
+            });
+            
+            chrome.storage.local.set({
+                currencyRates: currencyRates,
+                currencyRatesDate: currencyRates.date
+            });
+            
+            log('Currency rates updated: USD=' + currencyRates.USD + ', EUR=' + currencyRates.EUR + ', RUB=' + currencyRates.RUB);
+        } catch (e) {
+            log('Error parsing currency rates: ' + e.message);
+        }
+    }
+    
+    function getCurrencyRates() {
+        return currencyRates;
     }
 
     function checkForUpdates(forceCheck) {
@@ -170,6 +265,7 @@
         log('Browser started');
         loadUpdateStatus();
         setUpdateAlarm();
+        fetchCurrencyRates();
     });
 
     chrome.alarms.onAlarm.addListener(function(alarm) {
@@ -241,6 +337,31 @@
             logFillOperation(message.data);
             sendResponse({ success: true });
             return false;
+        }
+        
+        if (message.action === 'getCurrencyRates') {
+            chrome.storage.local.get(['currencyRates', 'currencyRatesDate'], function(res) {
+                if (res.currencyRates) {
+                    currencyRates = res.currencyRates;
+                    currencyRates.date = res.currencyRatesDate;
+                }
+                sendResponse(currencyRates);
+            });
+            return true;
+        }
+        
+        if (message.action === 'fetchCurrencyRates') {
+            fetch('https://fstravel.asia/')
+                .then(function(response) { return response.text(); })
+                .then(function(html) {
+                    parseCurrencyRates(html);
+                    sendResponse(currencyRates);
+                })
+                .catch(function(error) {
+                    log('Fetch currency rates error: ' + error.message);
+                    sendResponse(currencyRates);
+                });
+            return true;
         }
         
         return false;

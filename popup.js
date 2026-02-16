@@ -23,6 +23,7 @@
         document.querySelector('.tab[data-tab="' + tabId + '"]').classList.add('active');
         document.getElementById(tabId).classList.add('active');
         if (tabId === 'history') loadHistory();
+        if (tabId === 'price') loadCurrencyRates();
     }
 
     /* ==================== SETTINGS ==================== */
@@ -425,6 +426,147 @@
         });
     }
 
+    /* ==================== CURRENCY RATES ==================== */
+    
+    var currencyRates = {
+        USD: 504.0,
+        EUR: 598.0,
+        RUB: 6.5,
+        UZS: 0.041,
+        KGS: 5.77,
+        AZN: 296.0,
+        date: null
+    };
+    
+    function loadCurrencyRates() {
+        chrome.storage.local.get(['currencyRates', 'currencyRatesDate'], function(res) {
+            if (res.currencyRates) {
+                currencyRates = res.currencyRates;
+                currencyRates.date = res.currencyRatesDate;
+            }
+            displayCurrencyRates();
+            updateQuickConvert();
+        });
+        
+        chrome.runtime.sendMessage({ action: 'getCurrencyRates' }, function(rates) {
+            if (rates) {
+                currencyRates = rates;
+                displayCurrencyRates();
+                updateQuickConvert();
+            }
+        });
+    }
+    
+    function displayCurrencyRates() {
+        var container = document.getElementById('currencyRates');
+        if (!container) return;
+        
+        if (!currencyRates) {
+            container.innerHTML = '<div class="currency-error">Rates not loaded</div>';
+            return;
+        }
+        
+        var html = '';
+        var mainRates = [
+            { code: 'USD', rate: currencyRates.USD },
+            { code: 'EUR', rate: currencyRates.EUR },
+            { code: 'RUB', rate: currencyRates.RUB }
+        ];
+        
+        mainRates.forEach(function(item) {
+            html += '<div class="currency-item">';
+            html += '<div class="currency-item-code">1 ' + item.code + '</div>';
+            html += '<div class="currency-item-rate">' + item.rate.toFixed(2) + ' KZT</div>';
+            html += '</div>';
+        });
+        
+        if (currencyRates.date) {
+            html += '<div class="currency-date">Updated: ' + currencyRates.date + '</div>';
+        }
+        
+        container.innerHTML = html;
+    }
+    
+    function updateQuickConvert() {
+        var usdInput = document.getElementById('quickUSD');
+        var eurInput = document.getElementById('quickEUR');
+        var rubInput = document.getElementById('quickRUB');
+        
+        if (usdInput) {
+            usdInput.addEventListener('input', function() {
+                var val = parseFloat(this.value) || 0;
+                var result = (val * currencyRates.USD).toFixed(0);
+                document.getElementById('quickUSDResult').textContent = '= ' + numberFormat(result) + ' KZT';
+            });
+        }
+        
+        if (eurInput) {
+            eurInput.addEventListener('input', function() {
+                var val = parseFloat(this.value) || 0;
+                var result = (val * currencyRates.EUR).toFixed(0);
+                document.getElementById('quickEURResult').textContent = '= ' + numberFormat(result) + ' KZT';
+            });
+        }
+        
+        if (rubInput) {
+            rubInput.addEventListener('input', function() {
+                var val = parseFloat(this.value) || 0;
+                var result = (val * currencyRates.RUB).toFixed(0);
+                document.getElementById('quickRUBResult').textContent = '= ' + numberFormat(result) + ' KZT';
+            });
+        }
+    }
+    
+    function numberFormat(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    }
+    
+    function calculatePrice() {
+        var price = parseFloat(document.getElementById('priceInput').value) || 0;
+        var currency = document.getElementById('currencyFrom').value;
+        var result = document.getElementById('priceResult');
+        
+        if (!price) {
+            result.className = 'tool-result show error';
+            result.innerHTML = '<div class="tool-result-title">Error</div>Enter price';
+            return;
+        }
+        
+        var rate = currencyRates[currency];
+        if (!rate) {
+            result.className = 'tool-result show error';
+            result.innerHTML = '<div class="tool-result-title">Error</div>Rate not available';
+            return;
+        }
+        
+        var kzt = (price * rate).toFixed(0);
+        
+        result.className = 'tool-result show success';
+        result.innerHTML = '<div class="tool-result-title">Result</div>' +
+            '<div class="tool-result-data">' +
+            '<dt>' + price + ' ' + currency + '</dt><dd>' + numberFormat(kzt) + ' KZT</dd>' +
+            '<dt>Rate</dt><dd>1 ' + currency + ' = ' + rate + ' KZT</dd>' +
+            '</div>' +
+            '<button class="copy-btn" onclick="navigator.clipboard.writeText(\'' + kzt + '\')">Copy KZT</button>';
+    }
+    
+    function refreshRates() {
+        var btn = document.getElementById('refreshRatesBtn');
+        btn.textContent = 'Refreshing...';
+        btn.disabled = true;
+        
+        chrome.runtime.sendMessage({ action: 'fetchCurrencyRates' }, function(rates) {
+            btn.textContent = 'Refresh Rates';
+            btn.disabled = false;
+            if (rates) {
+                currencyRates = rates;
+                displayCurrencyRates();
+                updateQuickConvert();
+                showMsg('Rates updated!', 'success');
+            }
+        });
+    }
+
     /* ==================== UTILITIES ==================== */
     
     function escapeHtml(text) {
@@ -471,6 +613,14 @@
         document.getElementById('cyrillicInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') transliterate();
         });
+
+        document.getElementById('calcPriceBtn').addEventListener('click', calculatePrice);
+        document.getElementById('refreshRatesBtn').addEventListener('click', refreshRates);
+        document.getElementById('priceInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') calculatePrice();
+        });
+        
+        loadCurrencyRates();
     }
 
     document.addEventListener('DOMContentLoaded', init);
