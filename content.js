@@ -420,8 +420,90 @@
 
         updateZoneStatus(zoneElement, 'Done!', 'green');
 
+        logFillOperation(data);
+
         await Utils.sleep(500);
         clickRecalculate();
+    }
+
+    /**
+     * Logs fill operation to history
+     * @param {Object} data - Passport data
+     */
+    function logFillOperation(data) {
+        const host = window.location.hostname;
+        let site = 'Unknown';
+        
+        if (host.includes('fstravel')) site = 'Fstravel';
+        else if (host.includes('kompastour')) site = 'Kompastour';
+        else if (host.includes('kazunion')) site = 'KazUnion';
+
+        const validatedData = validatePassportData(data);
+
+        chrome.runtime.sendMessage({
+            action: 'logFillOperation',
+            data: {
+                site: site,
+                surname: data.surname,
+                name: data.name,
+                number: data.number,
+                iin: data.iin,
+                birthDate: data.birthDate,
+                success: validatedData.isValid,
+                warnings: validatedData.warnings
+            }
+        });
+    }
+
+    /**
+     * Validates passport data
+     * @param {Object} data - Passport data
+     * @returns {Object} Validation result
+     */
+    function validatePassportData(data) {
+        const warnings = [];
+        let isValid = true;
+
+        if (!data.surname || data.surname.length < 2) {
+            warnings.push('Surname is too short or missing');
+        }
+        if (!data.name || data.name.length < 2) {
+            warnings.push('Name is too short or missing');
+        }
+        if (!data.number) {
+            warnings.push('Passport number is missing');
+            isValid = false;
+        }
+        if (!data.birthDate) {
+            warnings.push('Birth date is missing');
+            isValid = false;
+        }
+
+        if (data.validDate) {
+            const parts = data.validDate.split('.');
+            if (parts.length === 3) {
+                const expiryDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                const now = new Date();
+                const monthsValid = (expiryDate - now) / (1000 * 60 * 60 * 24 * 30);
+                
+                if (monthsValid < 0) {
+                    warnings.push('PASSPORT EXPIRED!');
+                    isValid = false;
+                } else if (monthsValid < 6) {
+                    warnings.push('Passport expires in less than 6 months');
+                }
+            }
+        } else {
+            warnings.push('Passport expiry date is missing');
+        }
+
+        if (data.iin && data.iin.length === 12) {
+            if (!PassportParser.validateIIN(data.iin)) {
+                warnings.push('IIN checksum validation failed');
+            }
+        }
+
+        return { isValid, warnings };
     }
 
     /**

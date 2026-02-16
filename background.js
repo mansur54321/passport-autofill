@@ -230,9 +230,94 @@
             sendResponse({ version: currentVersion });
             return true;
         }
+
+        if (message.action === 'validateIIN') {
+            var result = validateIIN(message.iin);
+            sendResponse(result);
+            return false;
+        }
+        
+        if (message.action === 'logFillOperation') {
+            logFillOperation(message.data);
+            sendResponse({ success: true });
+            return false;
+        }
         
         return false;
     });
+
+    /* ==================== IIN VALIDATION ==================== */
+    
+    function validateIIN(iin) {
+        if (!iin || iin.length !== 12 || !/^\d{12}$/.test(iin)) {
+            return { valid: false, error: 'IIN must be 12 digits' };
+        }
+
+        var weights1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+        var weights2 = [3, 4, 5, 6, 7, 8, 9, 10, 11, 1, 2];
+
+        var sum1 = 0;
+        for (var i = 0; i < 11; i++) {
+            sum1 += parseInt(iin[i]) * weights1[i];
+        }
+        var checkDigit = sum1 % 11;
+        
+        if (checkDigit === 10) {
+            var sum2 = 0;
+            for (var j = 0; j < 11; j++) {
+                sum2 += parseInt(iin[j]) * weights2[j];
+            }
+            checkDigit = sum2 % 11;
+        }
+
+        if (checkDigit !== parseInt(iin[11])) {
+            return { valid: false, error: 'Invalid checksum' };
+        }
+
+        var century = parseInt(iin[6]);
+        var yearPrefix;
+        if (century <= 2) yearPrefix = '18';
+        else if (century <= 4) yearPrefix = '19';
+        else yearPrefix = '20';
+
+        var year = yearPrefix + iin.substring(0, 2);
+        var month = iin.substring(2, 4);
+        var day = iin.substring(4, 6);
+
+        return {
+            valid: true,
+            info: {
+                birthDate: day + '.' + month + '.' + year,
+                gender: (century % 2 === 1) ? '1' : '0'
+            }
+        };
+    }
+
+    /* ==================== HISTORY LOGGING ==================== */
+    
+    function logFillOperation(data) {
+        chrome.storage.local.get(['fillHistory'], function(res) {
+            var history = res.fillHistory || [];
+            
+            history.unshift({
+                timestamp: Date.now(),
+                site: data.site,
+                name: data.surname + ' ' + data.name,
+                passport: data.number,
+                iin: data.iin,
+                birthDate: data.birthDate,
+                success: data.success,
+                warnings: data.warnings || []
+            });
+
+            if (history.length > 100) {
+                history = history.slice(0, 100);
+            }
+
+            chrome.storage.local.set({ fillHistory: history });
+            log('Operation logged: ' + data.surname + ' ' + data.name);
+        });
+    }
 
     log('Background service worker started. Version: ' + currentVersion);
 })();

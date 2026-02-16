@@ -3,12 +3,53 @@
 <head>
   <meta charset="utf-8">
   <style>
+    * { box-sizing: border-box; }
+    
     body { 
-      width: 300px; 
-      padding: 15px; 
+      width: 360px; 
+      min-height: 400px;
+      padding: 0;
+      margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
       background: #f9f9f9; 
     }
+    
+    .tabs {
+      display: flex;
+      background: #366383;
+    }
+    
+    .tab {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    
+    .tab:hover {
+      color: #fff;
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .tab.active {
+      color: #fff;
+      border-bottom-color: #fff;
+    }
+    
+    .tab-content {
+      display: none;
+      padding: 15px;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
     h3 { 
       margin: 0 0 15px 0; 
       color: #366383; 
@@ -16,9 +57,11 @@
       border-bottom: 1px solid #e0e0e0;
       padding-bottom: 10px;
     }
+    
     .form-group { 
       margin-bottom: 12px; 
     }
+    
     label { 
       display: block; 
       font-size: 12px; 
@@ -26,42 +69,49 @@
       font-weight: 600; 
       color: #333;
     }
+    
     input[type="email"],
     input[type="text"] { 
       width: 100%; 
       padding: 8px 10px; 
       border: 1px solid #ccc; 
       border-radius: 4px; 
-      box-sizing: border-box; 
       font-size: 13px;
       transition: border-color 0.2s;
     }
+    
     input:focus {
       outline: none;
       border-color: #366383;
     }
+    
     input.error {
       border-color: #dc3545;
     }
+    
     .error-msg {
       color: #dc3545;
       font-size: 11px;
       margin-top: 3px;
       display: none;
     }
+    
     .checkbox-group {
       display: flex;
       align-items: center;
       margin-bottom: 15px;
     }
+    
     .checkbox-group input[type="checkbox"] {
       margin-right: 8px;
     }
+    
     .checkbox-group label {
       margin-bottom: 0;
       font-weight: normal;
       cursor: pointer;
     }
+    
     button { 
       width: 100%; 
       padding: 10px; 
@@ -74,23 +124,33 @@
       font-size: 13px;
       transition: background-color 0.2s;
     }
+    
     button:hover { 
       background-color: #2d5270; 
     }
-    button:active {
-      background-color: #24415a;
-    }
+    
     button:disabled {
       background-color: #adb5bd;
       cursor: not-allowed;
     }
+    
     button.secondary {
       background-color: #6c757d;
       margin-top: 10px;
     }
+    
     button.secondary:hover {
       background-color: #5a6268;
     }
+    
+    button.danger {
+      background-color: #dc3545;
+    }
+    
+    button.danger:hover {
+      background-color: #c82333;
+    }
+    
     .msg { 
       font-size: 12px; 
       color: #155724; 
@@ -101,33 +161,25 @@
       padding: 8px;
       border-radius: 4px;
     }
+    
     .update-section {
       margin-top: 15px;
       padding-top: 10px;
       border-top: 1px solid #e0e0e0;
     }
+    
     .update-status {
       padding: 10px;
       border-radius: 4px;
       font-size: 12px;
       margin-bottom: 10px;
     }
-    .update-status.checking {
-      background: #fff3cd;
-      color: #856404;
-    }
-    .update-status.available {
-      background: #d4edda;
-      color: #155724;
-    }
-    .update-status.uptodate {
-      background: #e7f3ff;
-      color: #004085;
-    }
-    .update-status.error {
-      background: #f8d7da;
-      color: #721c24;
-    }
+    
+    .update-status.checking { background: #fff3cd; color: #856404; }
+    .update-status.available { background: #d4edda; color: #155724; }
+    .update-status.uptodate { background: #e7f3ff; color: #004085; }
+    .update-status.error { background: #f8d7da; color: #721c24; }
+    
     .changelog {
       background: #f8f9fa;
       border-radius: 4px;
@@ -135,19 +187,11 @@
       margin-top: 10px;
       font-size: 11px;
     }
-    .changelog h4 {
-      margin: 0 0 8px 0;
-      font-size: 12px;
-      color: #333;
-    }
-    .changelog ul {
-      margin: 0;
-      padding-left: 16px;
-      color: #555;
-    }
-    .changelog li {
-      margin-bottom: 4px;
-    }
+    
+    .changelog h4 { margin: 0 0 8px 0; font-size: 12px; color: #333; }
+    .changelog ul { margin: 0; padding-left: 16px; color: #555; }
+    .changelog li { margin-bottom: 4px; }
+    
     .version-info {
       margin-top: 15px;
       padding-top: 10px;
@@ -156,48 +200,319 @@
       color: #666;
       text-align: center;
     }
-    .version-info a {
-      color: #366383;
-      text-decoration: none;
+    
+    .version-info a { color: #366383; text-decoration: none; }
+    .version-info a:hover { text-decoration: underline; }
+    
+    /* History Tab */
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
     }
-    .version-info a:hover {
-      text-decoration: underline;
+    
+    .history-stats {
+      font-size: 11px;
+      color: #666;
+    }
+    
+    .history-list {
+      max-height: 350px;
+      overflow-y: auto;
+    }
+    
+    .history-item {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+    
+    .history-item:hover {
+      border-color: #366383;
+    }
+    
+    .history-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    
+    .history-item-site {
+      font-weight: 600;
+      color: #366383;
+    }
+    
+    .history-item-time {
+      font-size: 10px;
+      color: #999;
+    }
+    
+    .history-item-data {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 2px 8px;
+      font-size: 11px;
+    }
+    
+    .history-item-data dt {
+      color: #666;
+    }
+    
+    .history-item-data dd {
+      color: #333;
+      font-weight: 500;
+    }
+    
+    .history-item-status {
+      margin-top: 6px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    
+    .history-item-status.success {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .history-item-status.warning {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    .history-item-status.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    
+    .history-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+    
+    .history-empty-icon {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+    
+    /* Tools Tab */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .tool-card {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .tool-card:hover {
+      border-color: #366383;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .tool-card-icon {
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+    
+    .tool-card-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .tool-card-desc {
+      font-size: 10px;
+      color: #666;
+      margin-top: 4px;
+    }
+    
+    .quick-actions {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 15px;
+    }
+    
+    .quick-actions h4 {
+      margin: 0 0 10px 0;
+      font-size: 13px;
+      color: #333;
+    }
+    
+    .quick-action-btn {
+      display: block;
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 6px;
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #333;
+      cursor: pointer;
+      text-align: left;
+    }
+    
+    .quick-action-btn:hover {
+      background: #e9ecef;
+    }
+    
+    .quick-action-btn:last-child {
+      margin-bottom: 0;
+    }
+    
+    .info-section {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 11px;
+      color: #856404;
+    }
+    
+    .info-section h4 {
+      margin: 0 0 6px 0;
+      font-size: 12px;
+    }
+    
+    .info-section ul {
+      margin: 0;
+      padding-left: 16px;
+    }
+    
+    .info-section li {
+      margin-bottom: 4px;
     }
   </style>
 </head>
 <body>
-  <h3>Default Settings</h3>
-  
-  <div class="form-group">
-    <label for="email">Email:</label>
-    <input type="email" id="email" placeholder="agent@mail.ru">
-    <div id="email-error" class="error-msg"></div>
+  <div class="tabs">
+    <div class="tab active" data-tab="settings">Settings</div>
+    <div class="tab" data-tab="history">History</div>
+    <div class="tab" data-tab="tools">Tools</div>
   </div>
   
-  <div class="form-group">
-    <label for="phone">Phone:</label>
-    <input type="text" id="phone" placeholder="7771234567">
-    <div id="phone-error" class="error-msg"></div>
-  </div>
+  <!-- Settings Tab -->
+  <div id="settings" class="tab-content active">
+    <h3>Default Settings</h3>
+    
+    <div class="form-group">
+      <label for="email">Email:</label>
+      <input type="email" id="email" placeholder="agent@mail.ru">
+      <div id="email-error" class="error-msg"></div>
+    </div>
+    
+    <div class="form-group">
+      <label for="phone">Phone:</label>
+      <input type="text" id="phone" placeholder="7771234567">
+      <div id="phone-error" class="error-msg"></div>
+    </div>
 
-  <div class="checkbox-group">
-    <input type="checkbox" id="autoFill">
-    <label for="autoFill">Auto-fill without preview</label>
+    <div class="checkbox-group">
+      <input type="checkbox" id="autoFill">
+      <label for="autoFill">Auto-fill without preview</label>
+    </div>
+    
+    <button id="saveBtn">Save</button>
+    <div id="msg" class="msg">Saved!</div>
+    
+    <div class="update-section">
+      <button id="checkUpdateBtn" class="secondary">Check for Updates</button>
+      <div id="updateStatus" class="update-status" style="display:none;"></div>
+      <div id="changelog" class="changelog" style="display:none;"></div>
+    </div>
+    
+    <div class="version-info">
+      Version: <span id="version">-</span><br>
+      <a href="https://github.com/mansur54321/passport-autofill" target="_blank">GitHub</a> | 
+      <a href="https://github.com/mansur54321/passport-autofill/releases" target="_blank">Releases</a>
+    </div>
   </div>
   
-  <button id="saveBtn">Save</button>
-  <div id="msg" class="msg">Saved!</div>
-  
-  <div class="update-section">
-    <button id="checkUpdateBtn" class="secondary">Check for Updates</button>
-    <div id="updateStatus" class="update-status" style="display:none;"></div>
-    <div id="changelog" class="changelog" style="display:none;"></div>
+  <!-- History Tab -->
+  <div id="history" class="tab-content">
+    <div class="history-header">
+      <h3>Fill History</h3>
+      <div class="history-stats">
+        <span id="historyCount">0</span> operations
+      </div>
+    </div>
+    
+    <div id="historyList" class="history-list">
+      <div class="history-empty">
+        <div class="history-empty-icon">📋</div>
+        <div>No history yet</div>
+        <div style="font-size:11px;margin-top:4px;">Drop a passport PDF to get started</div>
+      </div>
+    </div>
+    
+    <button id="clearHistoryBtn" class="secondary danger" style="margin-top:10px;">Clear History</button>
   </div>
   
-  <div class="version-info">
-    Version: <span id="version">-</span><br>
-    <a href="https://github.com/mansur54321/passport-autofill" target="_blank">GitHub</a> | 
-    <a href="https://github.com/mansur54321/passport-autofill/releases" target="_blank">Releases</a>
+  <!-- Tools Tab -->
+  <div id="tools" class="tab-content">
+    <h3>Quick Tools</h3>
+    
+    <div class="tools-grid">
+      <div class="tool-card" id="toolIinCheck">
+        <div class="tool-card-icon">🔍</div>
+        <div class="tool-card-title">IIN Validator</div>
+        <div class="tool-card-desc">Check IIN checksum</div>
+      </div>
+      
+      <div class="tool-card" id="toolPassportCheck">
+        <div class="tool-card-icon">🛂</div>
+        <div class="tool-card-title">Passport Validity</div>
+        <div class="tool-card-desc">Check expiry date</div>
+      </div>
+      
+      <div class="tool-card" id="toolCalculator">
+        <div class="tool-card-icon">🧮</div>
+        <div class="tool-card-title">Age Calculator</div>
+        <div class="tool-card-desc">From birth date</div>
+      </div>
+      
+      <div class="tool-card" id="toolTranslit">
+        <div class="tool-card-icon">🔤</div>
+        <div class="tool-card-title">Transliteration</div>
+        <div class="tool-card-desc">Cyrillic to Latin</div>
+      </div>
+    </div>
+    
+    <div class="quick-actions">
+      <h4>Quick Actions</h4>
+      <button class="quick-action-btn" id="actionCopyEmail">Copy default email</button>
+      <button class="quick-action-btn" id="actionCopyPhone">Copy default phone</button>
+      <button class="quick-action-btn" id="actionExportHistory">Export history to CSV</button>
+    </div>
+    
+    <div class="info-section">
+      <h4>💡 Tips for Travel Agents</h4>
+      <ul>
+        <li>Drag & drop PDF passport directly to tourist fields</li>
+        <li>Check passport validity before booking</li>
+        <li>IIN must be valid for Kazakhstan citizens</li>
+        <li>Passport should be valid 6+ months after trip end</li>
+      </ul>
+    </div>
   </div>
 
   <script src="popup.js"></script>
