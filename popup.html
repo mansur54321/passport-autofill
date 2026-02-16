@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { 
+      width: 280px; 
+      padding: 15px; 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      background: #f9f9f9; 
+    }
+    h3 { 
+      margin: 0 0 15px 0; 
+      color: #366383; 
+      font-size: 16px; 
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 10px;
+    }
+    .form-group { 
+      margin-bottom: 12px; 
+    }
+    label { 
+      display: block; 
+      font-size: 12px; 
+      margin-bottom: 4px; 
+      font-weight: 600; 
+      color: #333;
+    }
+    input[type="email"],
+    input[type="text"] { 
+      width: 100%; 
+      padding: 8px 10px; 
+      border: 1px solid #ccc; 
+      border-radius: 4px; 
+      box-sizing: border-box; 
+      font-size: 13px;
+      transition: border-color 0.2s;
+    }
+    input:focus {
+      outline: none;
+      border-color: #366383;
+    }
+    input.error {
+      border-color: #dc3545;
+    }
+    .error-msg {
+      color: #dc3545;
+      font-size: 11px;
+      margin-top: 3px;
+      display: none;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .checkbox-group input[type="checkbox"] {
+      margin-right: 8px;
+    }
+    .checkbox-group label {
+      margin-bottom: 0;
+      font-weight: normal;
+      cursor: pointer;
+    }
+    button { 
+      width: 100%; 
+      padding: 10px; 
+      background-color: #366383; 
+      color: white; 
+      border: none; 
+      border-radius: 4px; 
+      cursor: pointer; 
+      font-weight: 600;
+      font-size: 13px;
+      transition: background-color 0.2s;
+    }
+    button:hover { 
+      background-color: #2d5270; 
+    }
+    button:active {
+      background-color: #24415a;
+    }
+    button.secondary {
+      background-color: #6c757d;
+      margin-top: 10px;
+    }
+    button.secondary:hover {
+      background-color: #5a6268;
+    }
+    .msg { 
+      font-size: 12px; 
+      color: #155724; 
+      background: #d4edda;
+      display: none; 
+      text-align: center; 
+      margin-top: 10px; 
+      padding: 8px;
+      border-radius: 4px;
+    }
+    .version-info {
+      margin-top: 15px;
+      padding-top: 10px;
+      border-top: 1px solid #e0e0e0;
+      font-size: 11px;
+      color: #666;
+      text-align: center;
+    }
+    .version-info a {
+      color: #366383;
+      text-decoration: none;
+    }
+    .version-info a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h3>Default Settings</h3>
+  
+  <div class="form-group">
+    <label for="email">Email:</label>
+    <input type="email" id="email" placeholder="agent@mail.ru">
+    <div id="email-error" class="error-msg"></div>
+  </div>
+  
+  <div class="form-group">
+    <label for="phone">Phone:</label>
+    <input type="text" id="phone" placeholder="7771234567">
+    <div id="phone-error" class="error-msg"></div>
+  </div>
+
+  <div class="checkbox-group">
+    <input type="checkbox" id="autoFill">
+    <label for="autoFill">Auto-fill without preview</label>
+  </div>
+  
+  <button id="saveBtn">Save</button>
+  <div id="msg" class="msg">Saved!</div>
+  
+  <button id="checkUpdateBtn" class="secondary">Check for Updates</button>
+  
+  <div class="version-info">
+    Version: <span id="version">-</span><br>
+    <a href="https://github.com/mansur54321/passport-autofill" target="_blank">GitHub</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

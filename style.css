@@ -1,0 +1,255 @@
+/**
+ * Passport AutoFill Extension Styles
+ */
+
+/* Drop zone for passport upload */
+.fs-passport-dropzone {
+    float: right;
+    display: inline-block;
+    border: 2px dashed #366383;
+    border-radius: 6px;
+    padding: 2px 10px;
+    background: #fff;
+    color: #366383;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: -3px;
+    transition: all 0.2s ease;
+    min-width: 120px;
+    text-align: center;
+}
+
+.fs-passport-dropzone:hover {
+    background-color: #f0f8ff;
+}
+
+.fs-passport-dropzone.dragover {
+    background-color: #ffe874;
+    border-color: #f36f21;
+    transform: scale(1.05);
+    color: #d35400;
+}
+
+.fs-status-text {
+    display: block;
+    font-size: 10px;
+    font-weight: normal;
+    color: #555;
+    margin-top: 1px;
+}
+
+/* Price Widget */
+#fs-price-widget {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 15px;
+    z-index: 10000;
+    font-family: Arial, sans-serif;
+    min-width: 200px;
+    transition: background-color 0.5s ease;
+}
+
+#fs-price-widget h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 14px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+#fs-price-widget .current-price {
+    font-size: 18px;
+    font-weight: bold;
+    color: #366383;
+    margin-bottom: 5px;
+}
+
+#fs-price-widget .secondary-price {
+    font-size: 12px;
+    color: #777;
+}
+
+#fs-price-widget .price-diff {
+    display: block;
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+/* Price animations */
+@keyframes flashGreen {
+    0% { background-color: #d4edda; }
+    100% { background-color: white; }
+}
+
+@keyframes flashRed {
+    0% { background-color: #f8d7da; }
+    100% { background-color: white; }
+}
+
+.price-up {
+    color: #721c24;
+    background-color: #f8d7da;
+}
+
+.price-down {
+    color: #155724;
+    background-color: #d4edda;
+}
+
+/* Preview Modal */
+#fs-preview-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.fs-modal-content {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    max-width: 450px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.fs-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.fs-modal-header h3 {
+    margin: 0;
+    color: #366383;
+    font-size: 18px;
+}
+
+.fs-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    line-height: 1;
+    width: auto;
+}
+
+.fs-modal-close:hover {
+    color: #333;
+}
+
+.fs-modal-body {
+    padding: 20px;
+}
+
+.fs-errors,
+.fs-warnings {
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.fs-errors {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.fs-warnings {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.fs-errors ul,
+.fs-warnings ul {
+    margin: 5px 0 0 0;
+    padding-left: 20px;
+}
+
+.fs-data-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.fs-data-grid label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: #333;
+}
+
+.fs-data-grid input,
+.fs-data-grid select {
+    flex: 1;
+    max-width: 200px;
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 13px;
+    margin-left: 10px;
+}
+
+.fs-data-grid input:focus,
+.fs-data-grid select:focus {
+    outline: none;
+    border-color: #366383;
+}
+
+.fs-modal-footer {
+    display: flex;
+    gap: 10px;
+    padding: 15px 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.fs-btn {
+    flex: 1;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.fs-btn-cancel {
+    background: #e0e0e0;
+    color: #333;
+    width: auto;
+}
+
+.fs-btn-cancel:hover {
+    background: #d0d0d0;
+}
+
+.fs-btn-fill {
+    background: #366383;
+    color: white;
+    width: auto;
+}
+
+.fs-btn-fill:hover {
+    background: #2d5270;
+}
