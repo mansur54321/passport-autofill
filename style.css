@@ -375,3 +375,16 @@
     margin: 5px 0 0 0;
     padding-left: 20px;
 }
+
+/* Currency Converter - KZT Price */
+.fs-price-kzt {
+    color: #666;
+    font-weight: 500;
+    font-size: 0.9em;
+    margin-left: 4px;
+    white-space: nowrap;
+}
+
+.fs-price-kzt:hover {
+    color: #2e7d32;
+}

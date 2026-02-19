@@ -4,6 +4,11 @@
  * @module content
  */
 
+// Firefox compatibility
+if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
+    var chrome = browser;
+}
+
 (function() {
     'use strict';
 
@@ -790,6 +795,143 @@
 
     const observer = new MutationObserver(debouncedInit);
     observer.observe(document.body, { childList: true, subtree: true });
+
+    /* ==================== CURRENCY CONVERTER ==================== */
+    
+    const CurrencyConverter = {
+        rates: {
+            USD: 504.0,
+            EUR: 598.0,
+            RUB: 6.5
+        },
+        initialized: false,
+        observer: null,
+        
+        init: function() {
+            if (this.initialized) return;
+            
+            const path = window.location.pathname;
+            const isB2B = path.includes('/bron') || path.includes('/search_tour') || path.includes('/menu');
+            
+            if (!isB2B) return;
+            
+            this.extractRates();
+            this.convertAllPrices();
+            this.startObserver();
+            this.initialized = true;
+        },
+        
+        extractRates: function() {
+            const currencyBlock = document.querySelector('.currency-row-block');
+            if (!currencyBlock) return;
+            
+            const html = currencyBlock.innerHTML;
+            
+            const patterns = [
+                { code: 'USD', regex: /1\s*USD[^\d]*(\d+\.?\d*)\s*KZT/i },
+                { code: 'EUR', regex: /1\s*EUR[^\d]*(\d+\.?\d*)\s*KZT/i },
+                { code: 'RUB', regex: /1\s*RUB[^\d]*(\d+\.?\d*)\s*KZT/i }
+            ];
+            
+            patterns.forEach(item => {
+                const match = html.match(item.regex);
+                if (match) {
+                    this.rates[item.code] = parseFloat(match[1]);
+                }
+            });
+            
+            chrome.storage.local.set({ currencyRates: this.rates });
+        },
+        
+        convertAllPrices: function() {
+            const selectors = [
+                '.CLAIMPRICE',
+                '.amount_money',
+                '.commission_money',
+                '.cells.price .content',
+                '.PRICE_DETAIL td',
+                '.fcontent .content'
+            ];
+            
+            selectors.forEach(selector => {
+                document.querySelectorAll(selector).forEach(el => {
+                    this.convertPriceElement(el);
+                });
+            });
+        },
+        
+        convertPriceElement: function(el) {
+            if (el.dataset.fsConverted === 'true') return;
+            
+            const text = el.textContent || el.innerText;
+            const priceMatch = text.match(/([\d\s]+\.?\d*)\s*(EUR|USD|RUB)/i);
+            
+            if (!priceMatch) return;
+            
+            const amount = parseFloat(priceMatch[1].replace(/\s/g, ''));
+            const currency = priceMatch[2].toUpperCase();
+            const rate = this.rates[currency];
+            
+            if (!rate || isNaN(amount)) return;
+            
+            const kzt = Math.round(amount * rate);
+            const formattedKzt = this.formatNumber(kzt);
+            
+            const kztSpan = document.createElement('span');
+            kztSpan.className = 'fs-price-kzt';
+            kztSpan.textContent = ` (≈ ${formattedKzt} ₸)`;
+            
+            el.appendChild(kztSpan);
+            el.dataset.fsConverted = 'true';
+        },
+        
+        formatNumber: function(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        },
+        
+        startObserver: function() {
+            if (this.observer) return;
+            
+            this.observer = new MutationObserver((mutations) => {
+                mutations.forEach(mutation => {
+                    mutation.addedNodes.forEach(node => {
+                        if (node.nodeType === 1) {
+                            this.processNewNode(node);
+                        }
+                    });
+                });
+            });
+            
+            this.observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        },
+        
+        processNewNode: function(node) {
+            const selectors = [
+                '.CLAIMPRICE',
+                '.amount_money',
+                '.commission_money',
+                '.cells.price .content',
+                '.PRICE_DETAIL td',
+                '.fcontent .content'
+            ];
+            
+            selectors.forEach(selector => {
+                if (node.matches && node.matches(selector)) {
+                    this.convertPriceElement(node);
+                }
+                if (node.querySelectorAll) {
+                    node.querySelectorAll(selector).forEach(el => {
+                        this.convertPriceElement(el);
+                    });
+                }
+            });
+        }
+    };
+    
+    setTimeout(() => CurrencyConverter.init(), 1000);
 
     window.PassportAutoFill = {
         getSiteSettings,

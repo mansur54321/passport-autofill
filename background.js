@@ -3,6 +3,11 @@
  * Handles auto-update from GitHub releases
  */
 
+// Firefox compatibility
+if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
+    var chrome = browser;
+}
+
 (function() {
     'use strict';
 

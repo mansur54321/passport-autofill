@@ -3,6 +3,11 @@
  * Handles extension popup UI, settings, history, and tools
  */
 
+// Firefox compatibility
+if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
+    var chrome = browser;
+}
+
 (function() {
     'use strict';
 

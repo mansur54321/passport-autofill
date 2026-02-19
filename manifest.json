@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Passport AutoFill (Multi-Operator)",
-  "version": "5.2.0",
+  "version": "5.3.0",
   "description": "Auto-fill passport data for Fstravel, Kompas, KazUnion (PDF Drag&Drop)",
   "permissions": ["activeTab", "storage", "scripting", "alarms", "notifications"],
   "host_permissions": [
@@ -13,6 +13,12 @@
     "file://*/*",
     "https://api.github.com/*"
   ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "passport-autofill@fstravel.asia",
+      "strict_min_version": "109.0"
+    }
+  },
   "action": {
     "default_popup": "popup.html",
     "default_icon": "icon.png"
