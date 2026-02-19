@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "Passport AutoFill (Multi-Operator)",
+  "version": "5.3.0",
+  "description": "Auto-fill passport data for Fstravel, Kompas, KazUnion (PDF Drag&Drop)",
+  "permissions": ["activeTab", "storage", "scripting", "alarms", "notifications"],
+  "host_permissions": [
+    "*://*.fstravel.asia/*",
+    "*://*.fstravel.com/*",
+    "*://*.kompastour.kz/*",
+    "*://*.kompastour.com/*",
+    "*://*.kazunion.com/*",
+    "file://*/*",
+    "https://api.github.com/*"
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "passport-autofill@fstravel.asia",
+      "strict_min_version": "109.0"
+    }
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.fstravel.asia/*",
+        "*://*.fstravel.com/*",
+        "*://*.kompastour.kz/*",
+        "*://*.kompastour.com/*",
+        "*://*.kazunion.com/*",
+        "file://*/*"
+      ],
+      "js": ["pdf.min.js", "utils.js", "passport-parser.js", "content.js"],
+      "css": ["style.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["pdf.worker.min.js", "icon.png"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
