@@ -1,27 +1,3 @@
-/**
- * Passport Parser Module
- * Parses passport data from PDF text content using MRZ (ICAO Doc 9303) standard
- * @module passport-parser
- */
-
-/**
- * @typedef {Object} PassportData
- * @property {string} number - Passport number
- * @property {string} surname - Surname (family name)
- * @property {string} name - Given name
- * @property {string} birthDate - Date of birth (DD.MM.YYYY)
- * @property {string} issueDate - Issue date (DD.MM.YYYY)
- * @property {string} validDate - Expiry date (DD.MM.YYYY)
- * @property {string} iin - Individual Identification Number (12 digits)
- * @property {string} authority - Issuing authority
- * @property {string} gender - Gender code ("0" for female, "1" for male)
- * @property {string} pserie - Passport series
- * @property {string} nationality - Nationality code
- * @property {boolean} isValid - Whether passport data is valid
- * @property {string[]} errors - Validation errors
- * @property {string[]} warnings - Validation warnings
- */
-
 const PassportParser = (function() {
     const BLACKLIST_WORDS = [
         'PASSPORT', 'CODE', 'STATE', 'KAZ', 'SURNAME', 'GIVEN', 'NAMES',
@@ -30,11 +6,6 @@ const PassportParser = (function() {
         'ID', 'MRZ', 'DOCUMENT', 'TYPE', 'OF', 'THE'
     ];
 
-    /**
-     * Validates IIN (Individual Identification Number) using checksum
-     * @param {string} iin - 12-digit IIN
-     * @returns {boolean} - True if valid
-     */
     function validateIIN(iin) {
         if (!iin || iin.length !== 12 || !/^\d{12}$/.test(iin)) {
             return false;
@@ -59,11 +30,34 @@ const PassportParser = (function() {
         return checkDigit === parseInt(iin[11]);
     }
 
-    /**
-     * Extracts gender and birth date from IIN
-     * @param {string} iin - 12-digit IIN
-     * @returns {{gender: string, birthDate: string}|null}
-     */
+    function validateIINFull(iin) {
+        if (!iin || iin.length !== 12 || !/^\d{12}$/.test(iin)) {
+            return { valid: false, error: 'IIN must be 12 digits' };
+        }
+
+        if (!validateIIN(iin)) {
+            return { valid: false, error: 'Invalid checksum' };
+        }
+
+        const century = parseInt(iin[6]);
+        let yearPrefix;
+        if (century <= 2) yearPrefix = '18';
+        else if (century <= 4) yearPrefix = '19';
+        else yearPrefix = '20';
+
+        const year = yearPrefix + iin.substring(0, 2);
+        const month = iin.substring(2, 4);
+        const day = iin.substring(4, 6);
+
+        return {
+            valid: true,
+            info: {
+                birthDate: day + '.' + month + '.' + year,
+                gender: (century % 2 === 1) ? '1' : '0'
+            }
+        };
+    }
+
     function extractFromIIN(iin) {
         if (!validateIIN(iin)) return null;
 
@@ -87,11 +81,6 @@ const PassportParser = (function() {
         };
     }
 
-    /**
-     * Parses MRZ (Machine Readable Zone) according to ICAO Doc 9303
-     * @param {string} text - Full text from passport
-     * @returns {{surname: string, name: string, number: string, nationality: string, birthDate: string, validDate: string, gender: string}|null}
-     */
     function parseMRZ(text) {
         const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 30);
         
@@ -127,9 +116,6 @@ const PassportParser = (function() {
         return null;
     }
 
-    /**
-     * Parses TD1 format MRZ (ID cards)
-     */
     function parseTD1(line1, line2) {
         try {
             const nameMatch = line1.substring(5).match(/([A-Z]+)<<(.+)/);
@@ -155,9 +141,6 @@ const PassportParser = (function() {
         }
     }
 
-    /**
-     * Parses TD3 format MRZ (passports)
-     */
     function parseTD3(line1, line2) {
         try {
             const nameMatch = line1.substring(5).match(/([A-Z]+)<<(.+)/);
@@ -184,9 +167,6 @@ const PassportParser = (function() {
         }
     }
 
-    /**
-     * Converts MRZ date format (YYMMDD) to display format (DD.MM.YYYY)
-     */
     function formatMRZDate(mrzDate) {
         if (!mrzDate || mrzDate.length !== 6) return '';
         
@@ -198,11 +178,6 @@ const PassportParser = (function() {
         return `${day}.${month}.${fullYear}`;
     }
 
-    /**
-     * Parses dates from passport text
-     * @param {string} text - Full text from passport
-     * @returns {{birthDate: string, issueDate: string, validDate: string}}
-     */
     function parseDates(text) {
         const dateRegex = /\d{2}\.\d{2}\.\d{4}/g;
         const dates = text.match(dateRegex) || [];
@@ -222,49 +197,35 @@ const PassportParser = (function() {
         return { birthDate: '', issueDate: '', validDate: '' };
     }
 
-    /**
-     * Parses passport number from text
-     */
     function parsePassportNumber(text) {
         const passportMatch = text.match(/N(\d{8,9})/);
         return passportMatch ? 'N' + passportMatch[1] : '';
     }
 
-    /**
-     * Parses IIN from text
-     */
     function parseIIN(text) {
-        const iinMatch = text.match(/\b(\d{12})\b/);
-        return iinMatch ? iinMatch[1] : '';
+        const contextPatterns = [
+            /(?:ИИН|IIN|РНН|RNN|I\.I\.N\.?)[^\d]{0,10}(\d{12})\b/i,
+            /(\d{12})\b(?=[^\n]*?(?:ИИН|IIN|РНН|RNN))/i,
+            /\b(\d{12})\b/
+        ];
+
+        for (const pattern of contextPatterns) {
+            const match = text.match(pattern);
+            if (match) return match[1];
+        }
+        return '';
     }
 
-    /**
-     * Parses gender from text
-     */
     function parseGender(text) {
         if (/\bF\b/.test(text) || text.includes('Ж/F') || text.includes('ЖЕН')) return '0';
         if (/\bM\b/.test(text) || text.includes('М/M') || text.includes('МУЖ')) return '1';
         return '';
     }
 
-    /**
-     * Parses authority from text
-     */
-    function parseAuthority(text) {
-        if (text.includes('MINISTRY OF INTERNAL AFFAIRS')) {
-            return 'MINISTRY OF INTERNAL AFFAIRS';
-        }
-        if (text.includes('MIA OF KAZAKHSTAN')) {
-            return 'MIA OF KAZAKHSTAN';
-        }
+    function parseAuthority() {
         return 'MIA OF KAZAKHSTAN';
     }
 
-    /**
-     * Main parsing function
-     * @param {string} text - Full text extracted from passport PDF
-     * @returns {PassportData} Parsed passport data
-     */
     function parse(text) {
         const errors = [];
         const warnings = [];
@@ -341,7 +302,7 @@ const PassportParser = (function() {
             data.gender = parseGender(text);
         }
 
-        data.authority = parseAuthority(text);
+        data.authority = parseAuthority();
 
         if (!data.birthDate) {
             errors.push('Birth date not found');
@@ -357,11 +318,12 @@ const PassportParser = (function() {
     return {
         parse,
         validateIIN,
+        validateIINFull,
         extractFromIIN,
         parseMRZ
     };
 })();
 
-if (typeof window !== 'undefined') {
-    window.PassportParser = PassportParser;
+if (typeof self !== 'undefined') {
+    self.PassportParser = PassportParser;
 }

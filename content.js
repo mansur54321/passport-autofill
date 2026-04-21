@@ -1,10 +1,3 @@
-/**
- * Passport AutoFill - Content Script
- * Main script for handling PDF passport drag&drop and form filling
- * @module content
- */
-
-// Firefox compatibility
 if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
     var chrome = browser;
 }
@@ -17,14 +10,11 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
 
     let lastKnownPrice = 0;
     let previewModal = null;
+    let formDetected = false;
 
-    /**
-     * Gets site-specific settings
-     * @returns {Object}
-     */
     function getSiteSettings() {
         const host = window.location.hostname;
-        
+
         const defaultSettings = {
             nationalityId: '367404',
             forceKAZSeries: false,
@@ -32,14 +22,8 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
         };
 
         const siteConfigs = {
-            'kompastour': {
-                nationalityId: '7',
-                forceKAZSeries: true
-            },
-            'kazunion': {
-                nationalityId: '7',
-                forceKAZSeries: false
-            }
+            'kompastour': { nationalityId: '7', forceKAZSeries: true },
+            'kazunion': { nationalityId: '7', forceKAZSeries: false }
         };
 
         for (const [site, config] of Object.entries(siteConfigs)) {
@@ -51,12 +35,34 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
         return defaultSettings;
     }
 
-    /**
-     * Finds the legend container for a tourist element
-     * Different sites have different DOM structures
-     * @param {Element} touristDiv - Tourist div element
-     * @returns {Element|null}
-     */
+    function detectSiteId() {
+        const host = window.location.hostname;
+        if (host.includes('fstravel') || host.includes('funandsun')) return 'Fstravel';
+        if (host.includes('kompastour')) return 'Kompastour';
+        if (host.includes('kazunion')) return 'KazUnion';
+
+        chrome.storage.local.get(['customDomains'], function(res) {
+            const custom = res.customDomains || [];
+            for (const domain of custom) {
+                const re = new RegExp('^' + domain.pattern.replace(/\*/g, '.*').replace(/\?/g, '.') + '$');
+                if (re.test(window.location.href)) return domain.siteId;
+            }
+        });
+
+        return window.location.hostname;
+    }
+
+    function reportFormDetection() {
+        const hasTourists = !!Utils.$('div.tourist');
+        const hasPrice = !!Utils.$('.CLAIMPRICE');
+        const hasForm = hasTourists || hasPrice;
+
+        if (hasForm !== formDetected) {
+            formDetected = hasForm;
+            chrome.runtime.sendMessage({ action: 'formDetected', hasForm: hasForm });
+        }
+    }
+
     function findLegendContainer(touristDiv) {
         const parentFieldset = touristDiv.parentElement;
         if (parentFieldset) {
@@ -79,9 +85,6 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
         return null;
     }
 
-    /**
-     * Initializes drop zones for passport upload
-     */
     function initDropZones() {
         ['dragover', 'drop'].forEach(eventName => {
             document.addEventListener(eventName, (e) => {
@@ -109,17 +112,14 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                 }
             }
         });
+
+        reportFormDetection();
     }
 
-    /**
-     * Creates drop zone directly in container (fallback)
-     * @param {Element} container - Container element
-     * @param {string} index - Tourist index
-     */
     function createZoneForTouristContainer(container, index) {
         const div = document.createElement('div');
         div.className = 'fs-passport-dropzone';
-        div.innerHTML = '<span>Passport PDF</span><span class="fs-status-text">Drag and drop here</span>';
+        div.innerHTML = '<span>Passport PDF</span><span class="fs-status-text">Drag & drop or click</span>';
         div.style.marginBottom = '10px';
 
         div.addEventListener('dragover', (e) => {
@@ -136,27 +136,25 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
             e.preventDefault();
             e.stopPropagation();
             div.classList.remove('dragover');
-            
-            const file = e.dataTransfer.files[0];
-            if (file && file.type === 'application/pdf') {
-                await handlePdf(file, index, div);
-            } else {
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type === 'application/pdf');
+            if (files.length === 0) {
                 updateZoneStatus(div, 'Need PDF file!', 'red');
+            } else if (files.length === 1) {
+                await handlePdf(files[0], index, div);
+            } else {
+                await handleMultiplePdfs(files, div);
             }
         });
+
+        div.addEventListener('click', () => openFileDialog(index, div));
 
         container.insertBefore(div, container.firstChild);
     }
 
-    /**
-     * Creates a drop zone element for a tourist
-     * @param {Element} container - Container element
-     * @param {string} index - Tourist index
-     */
     function createZoneForTourist(container, index) {
         const div = document.createElement('div');
         div.className = 'fs-passport-dropzone';
-        div.innerHTML = '<span>Passport PDF</span><span class="fs-status-text">Drag and drop here</span>';
+        div.innerHTML = '<span>Passport PDF</span><span class="fs-status-text">Drag & drop or click</span>';
 
         div.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -172,21 +170,54 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
             e.preventDefault();
             e.stopPropagation();
             div.classList.remove('dragover');
-            
-            const file = e.dataTransfer.files[0];
-            if (file && file.type === 'application/pdf') {
-                await handlePdf(file, index, div);
-            } else {
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type === 'application/pdf');
+            if (files.length === 0) {
                 updateZoneStatus(div, 'Need PDF file!', 'red');
+            } else if (files.length === 1) {
+                await handlePdf(files[0], index, div);
+            } else {
+                await handleMultiplePdfs(files, div);
             }
         });
+
+        div.addEventListener('click', () => openFileDialog(index, div));
 
         container.appendChild(div);
     }
 
-    /**
-     * Initializes price monitoring widget
-     */
+    function openFileDialog(index, zoneElement) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.pdf';
+        input.multiple = true;
+        input.addEventListener('change', async () => {
+            const files = Array.from(input.files).filter(f => f.type === 'application/pdf');
+            if (files.length === 1) {
+                await handlePdf(files[0], index, zoneElement);
+            } else if (files.length > 1) {
+                await handleMultiplePdfs(files, zoneElement);
+            }
+        });
+        input.click();
+    }
+
+    async function handleMultiplePdfs(files, triggerZone) {
+        const touristDivs = Utils.$$('div.tourist');
+        const available = Array.from(touristDivs).filter(d => d.dataset.peopleinc);
+
+        for (let i = 0; i < files.length && i < available.length; i++) {
+            const index = available[i].dataset.peopleinc;
+            const zone = Utils.$('.fs-passport-dropzone', available[i].parentElement) ||
+                         Utils.$('.fs-passport-dropzone', available[i].closest('fieldset')) ||
+                         triggerZone;
+            await handlePdf(files[i], index, zone);
+        }
+
+        if (files.length > available.length) {
+            updateZoneStatus(triggerZone, (files.length - available.length) + ' PDFs skipped (no tourists)', 'orange');
+        }
+    }
+
     function initPriceWidget() {
         if (Utils.$('#fs-price-widget')) return;
 
@@ -201,40 +232,26 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
         document.body.appendChild(widget);
 
         const priceCell = Utils.$('.CLAIMPRICE');
-        
+
         if (priceCell) {
             updateWidgetPrice(priceCell.innerText);
-            const priceObserver = new MutationObserver(() => {
-                updateWidgetPrice(priceCell.innerText);
-            });
-            priceObserver.observe(priceCell, { 
-                childList: true, 
-                subtree: true, 
-                characterData: true 
-            });
         }
     }
 
-    /**
-     * Updates price widget display
-     * @param {string} rawText - Raw price text
-     */
     function updateWidgetPrice(rawText) {
         const widget = Utils.$('#fs-price-widget');
         if (!widget || !rawText) return;
 
         const cleanText = rawText.trim();
         const mainPriceMatch = cleanText.match(/([\d\s]+)(\w{3})/);
-        
+
         if (mainPriceMatch) {
             const currentVal = parseFloat(mainPriceMatch[1].replace(/\s/g, ''));
             const currency = mainPriceMatch[2];
             const lines = cleanText.split(/\n/);
-            
+
             Utils.$('.current-price', widget).innerText = lines[0];
-            if (lines[1]) {
-                Utils.$('.secondary-price', widget).innerText = lines[1];
-            }
+            if (lines[1]) Utils.$('.secondary-price', widget).innerText = lines[1];
 
             const diffEl = Utils.$('.price-diff', widget);
             if (lastKnownPrice !== 0 && lastKnownPrice !== currentVal) {
@@ -258,29 +275,83 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
         }
     }
 
-    /**
-     * Handles PDF file processing
-     * @param {File} file - PDF file
-     * @param {string} touristIndex - Tourist index
-     * @param {Element} zoneElement - Drop zone element
-     */
+    /* ==================== OCR ==================== */
+
+    async function loadOCREngine() {
+        if (window.Tesseract) return true;
+        try {
+            const resp = await fetch('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+            const code = await resp.text();
+            const blob = new Blob([code], { type: 'application/javascript' });
+            const url = URL.createObjectURL(blob);
+            const script = document.createElement('script');
+            script.src = url;
+            document.head.appendChild(script);
+            await new Promise((resolve, reject) => {
+                script.onload = resolve;
+                script.onerror = reject;
+            });
+            URL.revokeObjectURL(url);
+            return true;
+        } catch (e) {
+            console.error('[PassportAutoFill] OCR load failed:', e);
+            return false;
+        }
+    }
+
+    async function ocrFromPdf(pdf) {
+        const page = await pdf.getPage(1);
+        const viewport = page.getViewport({ scale: 2.0 });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext('2d');
+        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+
+        const loaded = await loadOCREngine();
+        if (!loaded) return null;
+
+        const worker = await Tesseract.createWorker('eng');
+        const { data: { text } } = await worker.recognize(canvas);
+        await worker.terminate();
+        return text;
+    }
+
+    /* ==================== PDF HANDLING ==================== */
+
     async function handlePdf(file, touristIndex, zoneElement) {
         updateZoneStatus(zoneElement, 'Processing...', 'blue');
-        
+
         try {
             const arrayBuffer = await file.arrayBuffer();
             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
             const page = await pdf.getPage(1);
             const textContent = await page.getTextContent();
             const fullText = textContent.items.map(item => item.str).join('\n');
-            
-            const parsedData = PassportParser.parse(fullText);
-            
+
+            let parsedData;
+            let ocrUsed = false;
+
+            if (fullText.trim().length < 20) {
+                updateZoneStatus(zoneElement, 'No text layer, trying OCR...', 'orange');
+                const ocrText = await ocrFromPdf(pdf);
+                if (ocrText && ocrText.trim().length > 20) {
+                    parsedData = PassportParser.parse(ocrText);
+                    ocrUsed = true;
+                } else {
+                    updateZoneStatus(zoneElement, 'OCR failed - no readable text', 'red');
+                    return;
+                }
+            } else {
+                parsedData = PassportParser.parse(fullText);
+            }
+
             chrome.storage.local.get(['defaultEmail', 'defaultPhone', 'autoFill'], (defaults) => {
                 parsedData.email = defaults.defaultEmail || '';
                 parsedData.phone = defaults.defaultPhone || '';
-                
-                if (defaults.autoFill && parsedData.isValid) {
+                parsedData.ocrUsed = ocrUsed;
+
+                if (defaults.autoFill && parsedData.isValid && !ocrUsed) {
                     fillFormSequentially(parsedData, touristIndex, zoneElement);
                 } else {
                     showPreviewModal(parsedData, touristIndex, zoneElement);
@@ -293,22 +364,24 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
         }
     }
 
-    /**
-     * Shows preview modal with extracted data and validation
-     * @param {Object} data - Parsed passport data
-     * @param {string} touristIndex - Tourist index
-     * @param {Element} zoneElement - Drop zone element
-     */
     function showPreviewModal(data, touristIndex, zoneElement) {
-        if (previewModal) {
-            previewModal.remove();
-        }
+        if (previewModal) previewModal.remove();
 
         const modal = document.createElement('div');
         modal.id = 'fs-preview-modal';
-        
+
         const validation = validatePassportData(data);
-        
+
+        const ocrWarningHtml = data.ocrUsed ? `
+            <div class="fs-ocr-warning">
+                <div class="fs-ocr-warning-icon">!</div>
+                <div>
+                    <strong>OCR Warning</strong><br>
+                    Data extracted via OCR may contain errors. Please verify ALL fields carefully before filling.
+                </div>
+            </div>
+        ` : '';
+
         modal.innerHTML = `
             <div class="fs-modal-content">
                 <div class="fs-modal-header">
@@ -316,12 +389,13 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                     <button class="fs-modal-close">&times;</button>
                 </div>
                 <div class="fs-modal-body">
+                    ${ocrWarningHtml}
                     <div class="fs-validation-summary ${validation.isValid ? 'success' : 'error'}">
                         <span class="fs-validation-icon">${validation.isValid ? '✓' : '!'}</span>
                         <span>${validation.isValid ? 'Data looks good' : 'Please check highlighted fields'}</span>
                         ${validation.warnings.length > 0 ? '<span class="fs-warnings-count">' + validation.warnings.length + ' warning(s)</span>' : ''}
                     </div>
-                    
+
                     <div class="fs-data-grid">
                         <div class="fs-field-row">
                             <label>Surname</label>
@@ -330,7 +404,7 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                                 <span class="fs-field-error" id="error-surname">${getFieldError('surname', data)}</span>
                             </div>
                         </div>
-                        
+
                         <div class="fs-field-row">
                             <label>Name</label>
                             <div class="fs-field-input">
@@ -338,7 +412,7 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                                 <span class="fs-field-error" id="error-name">${getFieldError('name', data)}</span>
                             </div>
                         </div>
-                        
+
                         <div class="fs-field-row">
                             <label>Passport</label>
                             <div class="fs-field-input">
@@ -346,7 +420,7 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                                 <span class="fs-field-error" id="error-number">${getFieldError('number', data)}</span>
                             </div>
                         </div>
-                        
+
                         <div class="fs-field-row">
                             <label>IIN</label>
                             <div class="fs-field-input">
@@ -354,7 +428,7 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                                 <span class="fs-field-error" id="error-iin">${getIINError(data.iin)}</span>
                             </div>
                         </div>
-                        
+
                         <div class="fs-field-row">
                             <label>Birth Date</label>
                             <div class="fs-field-input">
@@ -362,7 +436,7 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                                 <span class="fs-field-error" id="error-birth">${getFieldError('birthDate', data)}</span>
                             </div>
                         </div>
-                        
+
                         <div class="fs-field-row">
                             <label>Valid Until</label>
                             <div class="fs-field-input">
@@ -370,7 +444,7 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                                 <span class="fs-field-error" id="error-valid">${getValidDateError(data.validDate)}</span>
                             </div>
                         </div>
-                        
+
                         <div class="fs-field-row">
                             <label>Gender</label>
                             <div class="fs-field-input">
@@ -380,7 +454,7 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                                 </select>
                             </div>
                         </div>
-                        
+
                         <div class="fs-field-row">
                             <label>Email</label>
                             <div class="fs-field-input">
@@ -388,7 +462,7 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                                 <span class="fs-field-error" id="error-email">${getEmailError(data.email)}</span>
                             </div>
                         </div>
-                        
+
                         <div class="fs-field-row">
                             <label>Phone</label>
                             <div class="fs-field-input">
@@ -409,7 +483,7 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
 
         Utils.$('.fs-modal-close', modal).addEventListener('click', () => closeModal());
         Utils.$('.fs-btn-cancel', modal).addEventListener('click', () => closeModal());
-        
+
         const fillBtn = Utils.$('.fs-btn-fill', modal);
         fillBtn.addEventListener('click', () => {
             const editedData = {
@@ -424,13 +498,13 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                 email: Utils.$('#preview-email').value.trim(),
                 phone: Utils.$('#preview-phone').value.trim()
             };
-            
+
             const newValidation = validatePassportData(editedData);
             if (!newValidation.isValid) {
                 updateModalValidation(modal, editedData, newValidation);
                 return;
             }
-            
+
             closeModal();
             fillFormSequentially(editedData, touristIndex, zoneElement);
         });
@@ -438,10 +512,10 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
         modal.addEventListener('click', (e) => {
             if (e.target === modal) closeModal();
         });
-        
+
         addModalInputListeners(modal);
     }
-    
+
     function addModalInputListeners(modal) {
         const iinInput = Utils.$('#preview-iin', modal);
         if (iinInput) {
@@ -452,7 +526,7 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                 if (errorEl) errorEl.textContent = getIINError(this.value);
             });
         }
-        
+
         const validInput = Utils.$('#preview-valid', modal);
         if (validInput) {
             validInput.addEventListener('input', function() {
@@ -461,7 +535,7 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                 if (errorEl) errorEl.textContent = getValidDateError(this.value);
             });
         }
-        
+
         const emailInput = Utils.$('#preview-email', modal);
         if (emailInput) {
             emailInput.addEventListener('input', function() {
@@ -471,7 +545,7 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
             });
         }
     }
-    
+
     function updateModalValidation(modal, data, validation) {
         const summary = Utils.$('.fs-validation-summary', modal);
         if (summary) {
@@ -479,59 +553,48 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
             summary.innerHTML = '<span class="fs-validation-icon">' + (validation.isValid ? '✓' : '!') + '</span>' +
                 '<span>' + (validation.isValid ? 'Data looks good' : 'Please check highlighted fields') + '</span>';
         }
-        
-        const surnameInput = Utils.$('#preview-surname', modal);
-        if (surnameInput) {
-            surnameInput.className = getFieldClass('surname', data);
-            const errorEl = Utils.$('#error-surname', modal);
-            if (errorEl) errorEl.textContent = getFieldError('surname', data);
-        }
-        
-        const nameInput = Utils.$('#preview-name', modal);
-        if (nameInput) {
-            nameInput.className = getFieldClass('name', data);
-            const errorEl = Utils.$('#error-name', modal);
-            if (errorEl) errorEl.textContent = getFieldError('name', data);
-        }
-        
-        const numberInput = Utils.$('#preview-number', modal);
-        if (numberInput) {
-            numberInput.className = getFieldClass('number', data);
-            const errorEl = Utils.$('#error-number', modal);
-            if (errorEl) errorEl.textContent = getFieldError('number', data);
-        }
-        
+
+        const fields = ['surname', 'name', 'number'];
+        fields.forEach(field => {
+            const input = Utils.$('#preview-' + (field === 'number' ? 'number' : field), modal);
+            if (input) {
+                input.className = getFieldClass(field, data);
+                const errorEl = Utils.$('#error-' + (field === 'number' ? 'number' : field), modal);
+                if (errorEl) errorEl.textContent = getFieldError(field, data);
+            }
+        });
+
         const fillBtn = Utils.$('.fs-btn-fill', modal);
         if (fillBtn) fillBtn.disabled = !validation.isValid;
     }
-    
+
     function getFieldClass(field, data) {
         const value = data[field];
         if (!value || value.length < 2) return 'error';
         return 'success';
     }
-    
+
     function getFieldError(field, data) {
         const value = data[field];
         if (!value) return 'Required field';
         if (value.length < 2) return 'Too short';
         return '';
     }
-    
+
     function getIINClass(iin) {
         if (!iin) return 'error';
         if (iin.length !== 12) return 'warning';
         if (!PassportParser.validateIIN(iin)) return 'error';
         return 'success';
     }
-    
+
     function getIINError(iin) {
         if (!iin) return 'Required for KZ citizens';
         if (iin.length !== 12) return 'Must be 12 digits';
         if (!PassportParser.validateIIN(iin)) return 'Invalid checksum';
         return '';
     }
-    
+
     function getValidDateClass(dateStr) {
         if (!dateStr) return 'error';
         const parts = dateStr.split('.');
@@ -543,7 +606,7 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
         if (months < 6) return 'warning';
         return 'success';
     }
-    
+
     function getValidDateError(dateStr) {
         if (!dateStr) return 'Required';
         const parts = dateStr.split('.');
@@ -555,22 +618,19 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
         if (months < 6) return 'Expires soon (< 6 months)';
         return '';
     }
-    
+
     function getEmailClass(email) {
         if (!email) return '';
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'warning';
         return 'success';
     }
-    
+
     function getEmailError(email) {
         if (!email) return '';
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Invalid email format';
         return '';
     }
 
-    /**
-     * Closes preview modal
-     */
     function closeModal() {
         if (previewModal) {
             previewModal.remove();
@@ -578,20 +638,14 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
         }
     }
 
-    /**
-     * Fills form with passport data sequentially
-     * @param {Object} data - Passport data
-     * @param {string} index - Tourist index
-     * @param {Element} zoneElement - Drop zone element
-     */
     async function fillFormSequentially(data, index, zoneElement) {
         const settings = getSiteSettings();
-        
+
         updateZoneStatus(zoneElement, 'Configuring...', 'orange');
 
         Utils.tryCatch(() => setSelectValue(index, 'IDENTITY_DOCUMENT', settings.identityDocId));
         Utils.tryCatch(() => setSelectValue(index, 'NATIONALITY', settings.nationalityId));
-        
+
         await Utils.sleep(1500);
 
         updateZoneStatus(zoneElement, 'Filling...', 'orange');
@@ -606,7 +660,7 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
         setInputValue(index, 'INN', data.iin);
         setInputValue(index, 'EMAIL', data.email);
         setInputValue(index, 'PHONE', data.phone);
-        
+
         if (settings.forceKAZSeries) {
             setInputValue(index, 'PSERIE', 'KAZ');
         } else {
@@ -623,18 +677,29 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
         clickRecalculate();
     }
 
-    /**
-     * Logs fill operation to history
-     * @param {Object} data - Passport data
-     */
-    function logFillOperation(data) {
-        const host = window.location.hostname;
-        let site = 'Unknown';
-        
-        if (host.includes('fstravel')) site = 'Fstravel';
-        else if (host.includes('kompastour')) site = 'Kompastour';
-        else if (host.includes('kazunion')) site = 'KazUnion';
+    function fillFromTemplate(template, index, zoneElement) {
+        const data = {
+            surname: template.surname,
+            name: template.name,
+            number: template.number,
+            iin: template.iin,
+            birthDate: template.birthDate,
+            issueDate: template.issueDate || '',
+            validDate: template.validDate,
+            gender: template.gender,
+            email: template.email || '',
+            phone: template.phone || '',
+            authority: 'MIA OF KAZAKHSTAN',
+            pserie: template.pserie || '',
+            nationality: 'KAZ',
+            isValid: true,
+            ocrUsed: false
+        };
+        fillFormSequentially(data, index, zoneElement);
+    }
 
+    function logFillOperation(data) {
+        const site = detectSiteId();
         const validatedData = validatePassportData(data);
 
         chrome.runtime.sendMessage({
@@ -652,29 +717,14 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
         });
     }
 
-    /**
-     * Validates passport data
-     * @param {Object} data - Passport data
-     * @returns {Object} Validation result
-     */
     function validatePassportData(data) {
         const warnings = [];
         let isValid = true;
 
-        if (!data.surname || data.surname.length < 2) {
-            warnings.push('Surname is too short or missing');
-        }
-        if (!data.name || data.name.length < 2) {
-            warnings.push('Name is too short or missing');
-        }
-        if (!data.number) {
-            warnings.push('Passport number is missing');
-            isValid = false;
-        }
-        if (!data.birthDate) {
-            warnings.push('Birth date is missing');
-            isValid = false;
-        }
+        if (!data.surname || data.surname.length < 2) warnings.push('Surname is too short or missing');
+        if (!data.name || data.name.length < 2) warnings.push('Name is too short or missing');
+        if (!data.number) { warnings.push('Passport number is missing'); isValid = false; }
+        if (!data.birthDate) { warnings.push('Birth date is missing'); isValid = false; }
 
         if (data.validDate) {
             const parts = data.validDate.split('.');
@@ -682,54 +732,34 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                 const expiryDate = new Date(parts[2], parts[1] - 1, parts[0]);
                 const now = new Date();
                 const monthsValid = (expiryDate - now) / (1000 * 60 * 60 * 24 * 30);
-                
-                if (monthsValid < 0) {
-                    warnings.push('PASSPORT EXPIRED!');
-                    isValid = false;
-                } else if (monthsValid < 6) {
-                    warnings.push('Passport expires in less than 6 months');
-                }
+                if (monthsValid < 0) { warnings.push('PASSPORT EXPIRED!'); isValid = false; }
+                else if (monthsValid < 6) warnings.push('Passport expires in less than 6 months');
             }
         } else {
             warnings.push('Passport expiry date is missing');
         }
 
         if (data.iin && data.iin.length === 12) {
-            if (!PassportParser.validateIIN(data.iin)) {
-                warnings.push('IIN checksum validation failed');
-            }
+            if (!PassportParser.validateIIN(data.iin)) warnings.push('IIN checksum validation failed');
         }
 
         return { isValid, warnings };
     }
 
-    /**
-     * Clicks recalculate button
-     */
     function clickRecalculate() {
         const calcBtn = Utils.$('button.calc');
         if (calcBtn) {
-            console.log('[PassportAutoFill] Clicking recalculate');
             calcBtn.click();
-            
             const originalText = calcBtn.innerText;
             calcBtn.innerText = 'Recalculating...';
             setTimeout(() => calcBtn.innerText = originalText, 2000);
         }
     }
 
-    /**
-     * Sets input value with events
-     * @param {string} index - Tourist index
-     * @param {string} namePart - Input name part
-     * @param {string} value - Value to set
-     */
     function setInputValue(index, namePart, value) {
         if (value === undefined || value === null) return;
-        
         const input = Utils.$(`input[name*="[${index}][${namePart}]"]`);
         if (!input) return;
-
         input.focus();
         input.value = value;
         input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -737,54 +767,39 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
         input.dispatchEvent(new Event('blur', { bubbles: true }));
     }
 
-    /**
-     * Sets select value with events
-     * @param {string} index - Tourist index
-     * @param {string} namePart - Select name part
-     * @param {string} value - Value to set
-     */
     function setSelectValue(index, namePart, value) {
         if (!value) return;
-        
         const select = Utils.$(`select[name*="[${index}][${namePart}]"]`);
         if (!select) return;
-
         if (select.value === value) return;
-        
         select.value = value;
         select.dispatchEvent(new Event('change', { bubbles: true }));
-        
         if (typeof window.jQuery !== 'undefined') {
             window.jQuery(select).trigger('chosen:updated');
         }
     }
 
-    /**
-     * Updates drop zone status
-     * @param {Element} element - Drop zone element
-     * @param {string} text - Status text
-     * @param {string} color - Text color
-     */
     function updateZoneStatus(element, text, color) {
         const span = Utils.$('.fs-status-text', element);
         if (!span) return;
-
         span.innerText = text;
         span.style.color = color || '#555';
-        
         if (color === 'green' || color === 'red') {
             setTimeout(() => {
                 if (span.innerText === text) {
-                    span.innerText = 'Drag and drop here';
+                    span.innerText = 'Drag & drop or click';
                     span.style.color = '#555';
                 }
             }, 3000);
         }
     }
 
+    /* ==================== UNIFIED OBSERVER ==================== */
+
     const debouncedInit = Utils.debounce(() => {
         initDropZones();
         initPriceWidget();
+        CurrencyConverter.init();
     }, 300);
 
     if (document.readyState === 'loading') {
@@ -796,147 +811,121 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
     const observer = new MutationObserver(debouncedInit);
     observer.observe(document.body, { childList: true, subtree: true });
 
+    /* ==================== KEYBOARD SHORTCUT ==================== */
+
+    chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+        if (message.action === 'openFileDialog') {
+            const firstZone = Utils.$('.fs-passport-dropzone');
+            if (firstZone) {
+                const nearestTourist = firstZone.closest('fieldset, .tourist') || firstZone.parentElement;
+                const touristDiv = Utils.$('div.tourist', nearestTourist);
+                const index = touristDiv ? touristDiv.dataset.peopleinc : '0';
+                openFileDialog(index, firstZone);
+            }
+            sendResponse({ handled: true });
+        }
+
+        if (message.action === 'ping') {
+            sendResponse({ pong: true });
+        }
+
+        if (message.action === 'fillTemplate') {
+            const tpl = message.template;
+            const touristDivs = Utils.$$('div.tourist');
+            const available = Array.from(touristDivs).filter(d => d.dataset.peopleinc);
+            if (available.length === 0) {
+                sendResponse({ success: false });
+                return;
+            }
+            const index = available[0].dataset.peopleinc;
+            const zone = Utils.$('.fs-passport-dropzone', available[0].parentElement) ||
+                         Utils.$('.fs-passport-dropzone', available[0].closest('fieldset'));
+            fillFromTemplate(tpl, index, zone);
+            sendResponse({ success: true });
+        }
+    });
+
     /* ==================== CURRENCY CONVERTER ==================== */
-    
+
     const CurrencyConverter = {
-        rates: {
-            USD: 504.0,
-            EUR: 598.0,
-            RUB: 6.5
-        },
+        rates: { USD: 504.0, EUR: 598.0, RUB: 6.5 },
         initialized: false,
-        observer: null,
-        
+
         init: function() {
             if (this.initialized) return;
-            
+
             const path = window.location.pathname;
             const isB2B = path.includes('/bron') || path.includes('/search_tour') || path.includes('/menu');
-            
             if (!isB2B) return;
-            
+
             this.extractRates();
             this.convertAllPrices();
-            this.startObserver();
             this.initialized = true;
         },
-        
+
         extractRates: function() {
             const currencyBlock = document.querySelector('.currency-row-block');
             if (!currencyBlock) return;
-            
+
             const html = currencyBlock.innerHTML;
-            
             const patterns = [
                 { code: 'USD', regex: /1\s*USD[^\d]*(\d+\.?\d*)\s*KZT/i },
                 { code: 'EUR', regex: /1\s*EUR[^\d]*(\d+\.?\d*)\s*KZT/i },
                 { code: 'RUB', regex: /1\s*RUB[^\d]*(\d+\.?\d*)\s*KZT/i }
             ];
-            
+
             patterns.forEach(item => {
                 const match = html.match(item.regex);
-                if (match) {
-                    this.rates[item.code] = parseFloat(match[1]);
-                }
+                if (match) this.rates[item.code] = parseFloat(match[1]);
             });
-            
+
             chrome.storage.local.set({ currencyRates: this.rates });
         },
-        
+
         convertAllPrices: function() {
             const selectors = [
-                '.CLAIMPRICE',
-                '.amount_money',
-                '.commission_money',
-                '.cells.price .content',
-                '.PRICE_DETAIL td',
-                '.fcontent .content'
+                '.CLAIMPRICE', '.amount_money', '.commission_money',
+                '.cells.price .content', '.PRICE_DETAIL td', '.fcontent .content'
             ];
-            
             selectors.forEach(selector => {
                 document.querySelectorAll(selector).forEach(el => {
                     this.convertPriceElement(el);
                 });
             });
         },
-        
+
         convertPriceElement: function(el) {
             if (el.dataset.fsConverted === 'true') return;
-            
             const text = el.textContent || el.innerText;
             const priceMatch = text.match(/([\d\s]+\.?\d*)\s*(EUR|USD|RUB)/i);
-            
             if (!priceMatch) return;
-            
+
             const amount = parseFloat(priceMatch[1].replace(/\s/g, ''));
             const currency = priceMatch[2].toUpperCase();
             const rate = this.rates[currency];
-            
             if (!rate || isNaN(amount)) return;
-            
+
             const kzt = Math.round(amount * rate);
             const formattedKzt = this.formatNumber(kzt);
-            
+
             const kztSpan = document.createElement('span');
             kztSpan.className = 'fs-price-kzt';
             kztSpan.textContent = ` (≈ ${formattedKzt} ₸)`;
-            
+
             el.appendChild(kztSpan);
             el.dataset.fsConverted = 'true';
         },
-        
+
         formatNumber: function(num) {
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-        },
-        
-        startObserver: function() {
-            if (this.observer) return;
-            
-            this.observer = new MutationObserver((mutations) => {
-                mutations.forEach(mutation => {
-                    mutation.addedNodes.forEach(node => {
-                        if (node.nodeType === 1) {
-                            this.processNewNode(node);
-                        }
-                    });
-                });
-            });
-            
-            this.observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
-        },
-        
-        processNewNode: function(node) {
-            const selectors = [
-                '.CLAIMPRICE',
-                '.amount_money',
-                '.commission_money',
-                '.cells.price .content',
-                '.PRICE_DETAIL td',
-                '.fcontent .content'
-            ];
-            
-            selectors.forEach(selector => {
-                if (node.matches && node.matches(selector)) {
-                    this.convertPriceElement(node);
-                }
-                if (node.querySelectorAll) {
-                    node.querySelectorAll(selector).forEach(el => {
-                        this.convertPriceElement(el);
-                    });
-                }
-            });
         }
     };
-    
-    setTimeout(() => CurrencyConverter.init(), 1000);
 
     window.PassportAutoFill = {
         getSiteSettings,
         initDropZones,
         initPriceWidget,
-        handlePdf
+        handlePdf,
+        fillFromTemplate
     };
 })();

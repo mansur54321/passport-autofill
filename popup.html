@@ -4,506 +4,314 @@
   <meta charset="utf-8">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    body { 
-      width: 380px; 
-      min-height: 450px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-      background: #f5f7fa; 
+
+    body {
+      width: 400px;
+      min-height: 480px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f7fa;
     }
-    
-    /* Tabs */
+
+    @media (prefers-color-scheme: dark) {
+      body { background: #1a1a2e; color: #e0e0e0; }
+      .tabs { background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%); }
+      h3 { color: #90cdf4; }
+      h3::before { background: #90cdf4; }
+      label { color: #a0aec0; }
+      input, select { background: #2d3748; border-color: #4a5568; color: #e0e0e0; }
+      input:focus, select:focus { border-color: #90cdf4; box-shadow: 0 0 0 3px rgba(144,205,244,0.15); }
+      input.error { background: #3b1c1c; border-color: #fc8181; }
+      input.success { background: #1c3b2e; border-color: #68d391; }
+      input.warning { background: #3b3b1c; border-color: #f6e05e; }
+      button { background: #4a5568; }
+      button:hover { background: #718096; }
+      .tab-content { background: #1a1a2e; }
+      .tool-panel, .quick-actions, .checkbox-group { background: #2d3748; border-color: #4a5568; }
+      .tool-panel h4, .quick-actions h4 { color: #e0e0e0; }
+      .history-item { background: #2d3748; border-color: #4a5568; }
+      .history-item-site { color: #90cdf4; }
+      .msg.success { background: #1c3b2e; color: #68d391; }
+      .msg.error { background: #3b1c1c; color: #fc8181; }
+      .version-info { color: #718096; }
+      .version-info a { color: #90cdf4; }
+      .field-error { color: #fc8181; }
+      .section-title { color: #718096; border-bottom-color: #4a5568; }
+      .domain-item { background: #2d3748; border-color: #4a5568; }
+      .template-item { background: #2d3748; border-color: #4a5568; }
+      .tips-box { background: linear-gradient(135deg, #3b3b1c 0%, #2d3748 100%); border-color: #4a5568; }
+      .tips-box h4 { color: #f6e05e; }
+      .update-status.checking { background: #3b3b1c; color: #f6e05e; }
+      .update-status.available { background: #1c3b2e; color: #68d391; }
+      .update-status.uptodate { background: #2d3748; color: #90cdf4; }
+      .update-status.error { background: #3b1c1c; color: #fc8181; }
+      .currency-item { background: #2d3748; border-color: #4a5568; }
+      .currency-item-code { color: #90cdf4; }
+      .currency-item-rate { color: #e0e0e0; }
+    }
+
     .tabs {
       display: flex;
       background: linear-gradient(135deg, #366383 0%, #2d5270 100%);
     }
-    
+
     .tab {
       flex: 1;
-      padding: 12px 8px;
+      padding: 10px 4px;
       text-align: center;
       color: rgba(255,255,255,0.7);
       cursor: pointer;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       border-bottom: 3px solid transparent;
       transition: all 0.2s;
     }
-    
+
     .tab:hover { color: #fff; background: rgba(255,255,255,0.1); }
     .tab.active { color: #fff; border-bottom-color: #4fc3f7; }
-    
-    .tab-content { display: none; padding: 15px; }
+
+    .tab-content { display: none; padding: 12px; }
     .tab-content.active { display: block; }
-    
-    h3 { 
-      margin: 0 0 12px 0; 
-      color: #366383; 
-      font-size: 15px; 
+
+    h3 {
+      margin: 0 0 10px 0;
+      color: #366383;
+      font-size: 14px;
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    
+
     h3::before {
       content: '';
       width: 4px;
-      height: 16px;
+      height: 14px;
       background: #366383;
       border-radius: 2px;
     }
-    
-    /* Form elements */
-    .form-group { margin-bottom: 12px; }
-    
-    label { 
-      display: block; 
-      font-size: 11px; 
-      margin-bottom: 4px; 
-      font-weight: 600; 
+
+    .form-group { margin-bottom: 10px; }
+
+    label {
+      display: block;
+      font-size: 10px;
+      margin-bottom: 3px;
+      font-weight: 600;
       color: #555;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-    
-    input, select { 
-      width: 100%; 
-      padding: 10px 12px;
+
+    input, select {
+      width: 100%;
+      padding: 8px 10px;
       border: 2px solid #e0e5ec;
-      border-radius: 8px;
-      font-size: 13px;
+      border-radius: 6px;
+      font-size: 12px;
       transition: all 0.2s;
       background: #fff;
     }
-    
+
     input:focus, select:focus {
       outline: none;
       border-color: #366383;
       box-shadow: 0 0 0 3px rgba(54,99,131,0.1);
     }
-    
+
     input.error { border-color: #ef5350; background: #ffebee; }
     input.success { border-color: #66bb6a; background: #e8f5e9; }
     input.warning { border-color: #ffa726; background: #fff3e0; }
-    
-    .field-hint {
-      font-size: 10px;
-      color: #888;
-      margin-top: 3px;
-    }
-    
-    .field-error {
-      font-size: 11px;
-      color: #d32f2f;
-      margin-top: 4px;
-      display: none;
-      font-weight: 500;
-    }
-    
+
+    .field-hint { font-size: 10px; color: #888; margin-top: 2px; }
+    .field-error { font-size: 10px; color: #d32f2f; margin-top: 3px; display: none; font-weight: 500; }
     .field-error.show { display: block; }
-    
-    /* Buttons */
-    button { 
-      width: 100%; 
-      padding: 10px 16px;
+
+    button {
+      width: 100%;
+      padding: 8px 14px;
       background: #366383;
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
       cursor: pointer;
       font-weight: 600;
-      font-size: 13px;
+      font-size: 12px;
       transition: all 0.2s;
     }
-    
+
     button:hover { background: #2d5270; transform: translateY(-1px); }
     button:active { transform: translateY(0); }
     button:disabled { background: #adb5bd; cursor: not-allowed; transform: none; }
-    
     button.secondary { background: #78909c; }
     button.secondary:hover { background: #607d8b; }
-    
     button.success { background: #43a047; }
     button.success:hover { background: #388e3c; }
-    
-    /* Checkbox */
+    button.danger { background: #ef5350; }
+    button.danger:hover { background: #d32f2f; }
+
     .checkbox-group {
       display: flex;
       align-items: center;
-      margin-bottom: 12px;
-      padding: 8px;
+      margin-bottom: 10px;
+      padding: 6px;
       background: #fff;
-      border-radius: 8px;
+      border-radius: 6px;
       border: 1px solid #e0e5ec;
     }
-    
-    .checkbox-group input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      margin-right: 10px;
-    }
-    
-    .checkbox-group label {
-      margin: 0;
-      font-weight: normal;
-      cursor: pointer;
-      text-transform: none;
-    }
-    
-    /* Messages */
-    .msg { 
-      font-size: 12px;
-      padding: 10px;
-      border-radius: 8px;
-      margin-top: 10px;
-      display: none;
-    }
-    
+
+    .checkbox-group input[type="checkbox"] { width: 16px; height: 16px; margin-right: 8px; }
+    .checkbox-group label { margin: 0; font-weight: normal; cursor: pointer; text-transform: none; }
+
+    .msg { font-size: 11px; padding: 8px; border-radius: 6px; margin-top: 8px; display: none; }
     .msg.success { background: #d4edda; color: #155724; display: block; }
     .msg.error { background: #f8d7da; color: #721c24; display: block; }
-    .msg.info { background: #e3f2fd; color: #1565c0; display: block; }
-    
-    /* Update section */
-    .update-status {
-      padding: 10px;
-      border-radius: 8px;
-      font-size: 12px;
-      margin-top: 10px;
-      display: none;
-    }
-    
+
+    .update-status { padding: 8px; border-radius: 6px; font-size: 11px; margin-top: 8px; display: none; }
     .update-status.checking { display: block; background: #fff3cd; color: #856404; }
     .update-status.available { display: block; background: #d4edda; color: #155724; }
     .update-status.uptodate { display: block; background: #e3f2fd; color: #1565c0; }
     .update-status.error { display: block; background: #f8d7da; color: #721c24; }
-    
-    /* Version info */
-    .version-info {
-      margin-top: 15px;
-      padding-top: 10px;
-      border-top: 1px solid #e0e5ec;
-      font-size: 11px;
-      color: #888;
-      text-align: center;
-    }
-    
+
+    .version-info { margin-top: 12px; padding-top: 8px; border-top: 1px solid #e0e5ec; font-size: 10px; color: #888; text-align: center; }
     .version-info a { color: #366383; text-decoration: none; }
     .version-info a:hover { text-decoration: underline; }
-    
-    /* History */
-    .history-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    
-    .history-stats { font-size: 11px; color: #888; }
-    
-    .history-list {
-      max-height: 320px;
-      overflow-y: auto;
-    }
-    
+
+    .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .history-stats { font-size: 10px; color: #888; }
+    .history-list { max-height: 300px; overflow-y: auto; }
+
     .history-item {
-      background: #fff;
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 8px;
-      border: 1px solid #e0e5ec;
-      transition: all 0.2s;
+      background: #fff; border-radius: 8px; padding: 10px; margin-bottom: 6px;
+      border: 1px solid #e0e5ec; transition: all 0.2s;
     }
-    
-    .history-item:hover { border-color: #366383; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    
-    .history-item-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-    
-    .history-item-site {
-      font-weight: 600;
-      color: #366383;
-      font-size: 12px;
-    }
-    
-    .history-item-time {
-      font-size: 10px;
-      color: #999;
-    }
-    
-    .history-item-data {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 4px 12px;
-      font-size: 11px;
-    }
-    
+    .history-item:hover { border-color: #366383; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+    .history-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .history-item-site { font-weight: 600; color: #366383; font-size: 11px; }
+    .history-item-time { font-size: 9px; color: #999; }
+    .history-item-data { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; font-size: 10px; }
     .history-item-data dt { color: #888; }
     .history-item-data dd { color: #333; font-weight: 500; }
-    
-    .history-item-status {
-      display: inline-block;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 600;
-      margin-top: 8px;
-    }
-    
+    .history-item-status { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 600; margin-top: 6px; }
     .history-item-status.success { background: #e8f5e9; color: #2e7d32; }
     .history-item-status.warning { background: #fff3e0; color: #ef6c00; }
     .history-item-status.error { background: #ffebee; color: #c62828; }
-    
-    .history-empty {
-      text-align: center;
-      padding: 40px;
-      color: #aaa;
-    }
-    
-    .history-empty-icon { font-size: 40px; margin-bottom: 10px; }
-    
-    /* Tools */
-    .tool-panel {
-      background: #fff;
-      border-radius: 12px;
-      padding: 15px;
-      margin-bottom: 12px;
-      border: 1px solid #e0e5ec;
-    }
-    
-    .tool-panel h4 {
-      font-size: 13px;
-      color: #333;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .tool-result {
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      margin-top: 10px;
-      display: none;
-    }
-    
+    .history-empty { text-align: center; padding: 30px; color: #aaa; }
+
+    .tool-panel { background: #fff; border-radius: 10px; padding: 12px; margin-bottom: 10px; border: 1px solid #e0e5ec; }
+    .tool-panel h4 { font-size: 12px; color: #333; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .tool-result { padding: 10px; border-radius: 6px; font-size: 11px; margin-top: 8px; display: none; }
     .tool-result.show { display: block; }
     .tool-result.success { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
     .tool-result.error { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
     .tool-result.warning { background: #fff3e0; color: #ef6c00; border: 1px solid #ffcc80; }
     .tool-result.info { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
-    
-    .tool-result-title {
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-    
-    .tool-result-data {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 4px 12px;
-    }
-    
+    .tool-result-title { font-weight: 600; margin-bottom: 4px; }
+    .tool-result-data { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; }
     .tool-result-data dt { color: #666; }
     .tool-result-data dd { font-weight: 500; }
-    
-    .btn-row {
-      display: flex;
-      gap: 8px;
-    }
-    
+
+    .btn-row { display: flex; gap: 6px; }
     .btn-row button { flex: 1; }
-    
+
     .copy-btn {
-      padding: 6px 10px;
-      background: #f5f7fa;
-      border: 1px solid #e0e5ec;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 11px;
-      color: #666;
-      width: auto;
+      padding: 4px 8px; background: #f5f7fa; border: 1px solid #e0e5ec; border-radius: 4px;
+      cursor: pointer; font-size: 10px; color: #666; width: auto;
     }
-    
     .copy-btn:hover { background: #e0e5ec; }
-    
-    /* Quick actions */
-    .quick-actions {
-      background: #fff;
-      border-radius: 12px;
-      padding: 12px;
-      border: 1px solid #e0e5ec;
-      margin-bottom: 12px;
-    }
-    
-    .quick-actions h4 {
-      font-size: 12px;
-      color: #666;
-      margin-bottom: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
+
+    .quick-actions { background: #fff; border-radius: 10px; padding: 10px; border: 1px solid #e0e5ec; margin-bottom: 10px; }
+    .quick-actions h4 { font-size: 11px; color: #666; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
     .quick-btn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
-      padding: 10px;
-      background: #f8f9fa;
-      border: 1px solid #e0e5ec;
-      border-radius: 8px;
-      font-size: 12px;
-      color: #333;
-      cursor: pointer;
-      margin-bottom: 6px;
-      text-align: left;
+      display: flex; align-items: center; gap: 6px; width: 100%; padding: 8px;
+      background: #f8f9fa; border: 1px solid #e0e5ec; border-radius: 6px; font-size: 11px;
+      color: #333; cursor: pointer; margin-bottom: 4px; text-align: left;
     }
-    
     .quick-btn:last-child { margin-bottom: 0; }
     .quick-btn:hover { background: #e9ecef; }
-    .quick-btn-icon { font-size: 16px; }
-    
-    /* Tips */
-    .tips-box {
-      background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
-      border-radius: 12px;
-      padding: 12px;
-      border: 1px solid #ffe082;
-    }
-    
-    .tips-box h4 {
-      font-size: 12px;
-      color: #f57c00;
-      margin-bottom: 8px;
-    }
-    
-    .tips-box ul {
-      margin: 0;
-      padding-left: 16px;
-      font-size: 11px;
-      color: #666;
-    }
-    
-    .tips-box li { margin-bottom: 4px; }
-    
-    /* Currency Rates */
-    .currency-rates {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-    }
-    
-    .currency-item {
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding: 10px;
-      text-align: center;
-      border: 1px solid #e0e5ec;
-    }
-    
-    .currency-item-code {
-      font-weight: 700;
-      color: #366383;
-      font-size: 14px;
-    }
-    
-    .currency-item-rate {
-      font-size: 16px;
-      color: #333;
-      margin-top: 4px;
-    }
-    
-    .currency-loading {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 20px;
-      color: #888;
-    }
-    
-    .currency-error {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 20px;
-      color: #c62828;
-    }
-    
-    .currency-date {
-      grid-column: 1 / -1;
-      font-size: 10px;
-      color: #888;
-      text-align: center;
-      margin-top: 5px;
-    }
-    
-    /* Quick Convert */
-    .quick-convert {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    
-    .quick-convert-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .qc-currency {
-      width: 40px;
-      font-weight: 700;
-      color: #366383;
-      font-size: 12px;
-    }
-    
-    .qc-input {
-      flex: 1;
-      padding: 8px 10px !important;
-      font-size: 13px !important;
-    }
-    
-    .qc-result {
-      min-width: 100px;
-      font-size: 12px;
-      font-weight: 600;
-      color: #2e7d32;
-      text-align: right;
-    }
-    
-    /* Section divider */
+
+    .tips-box { background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%); border-radius: 10px; padding: 10px; border: 1px solid #ffe082; }
+    .tips-box h4 { font-size: 11px; color: #f57c00; margin-bottom: 6px; }
+    .tips-box ul { margin: 0; padding-left: 14px; font-size: 10px; color: #666; }
+    .tips-box li { margin-bottom: 3px; }
+
+    .currency-rates { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    .currency-item { background: #f8f9fa; border-radius: 6px; padding: 8px; text-align: center; border: 1px solid #e0e5ec; }
+    .currency-item-code { font-weight: 700; color: #366383; font-size: 13px; }
+    .currency-item-rate { font-size: 14px; color: #333; margin-top: 3px; }
+    .currency-date { grid-column: 1 / -1; font-size: 9px; color: #888; text-align: center; margin-top: 4px; }
+
+    .quick-convert { display: flex; flex-direction: column; gap: 8px; }
+    .quick-convert-row { display: flex; align-items: center; gap: 6px; }
+    .qc-currency { width: 36px; font-weight: 700; color: #366383; font-size: 11px; }
+    .qc-input { flex: 1; padding: 6px 8px !important; font-size: 12px !important; }
+    .qc-result { min-width: 90px; font-size: 11px; font-weight: 600; color: #2e7d32; text-align: right; }
+
     .section-title {
-      font-size: 11px;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin: 15px 0 10px 0;
-      padding-bottom: 5px;
-      border-bottom: 1px solid #e0e5ec;
+      font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.5px;
+      margin: 12px 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid #e0e5ec;
     }
+
+    /* Domains */
+    .domain-item {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #fff; border-radius: 6px; padding: 6px 10px; margin-bottom: 4px;
+      border: 1px solid #e0e5ec; font-size: 11px;
+    }
+    .domain-item .domain-pattern { flex: 1; color: #333; font-family: monospace; font-size: 10px; }
+    .domain-item .domain-site { color: #366383; font-weight: 600; font-size: 10px; margin: 0 8px; }
+    .domain-item .domain-remove {
+      background: none; border: none; color: #ef5350; cursor: pointer; font-size: 14px;
+      width: auto; padding: 0 4px;
+    }
+    .domain-item .domain-remove:hover { color: #c62828; }
+    .domain-item.default { opacity: 0.6; }
+    .domain-item.default .domain-remove { display: none; }
+
+    .add-domain-row { display: flex; gap: 4px; margin-top: 8px; }
+    .add-domain-row input { flex: 1; font-size: 10px; padding: 6px; }
+    .add-domain-row select { width: 90px; font-size: 10px; padding: 6px; }
+    .add-domain-row button { width: auto; padding: 6px 10px; font-size: 10px; }
+
+    /* Templates */
+    .template-item {
+      background: #fff; border-radius: 6px; padding: 8px 10px; margin-bottom: 4px;
+      border: 1px solid #e0e5ec; cursor: pointer; transition: all 0.2s;
+    }
+    .template-item:hover { border-color: #366383; }
+    .template-item-name { font-weight: 600; font-size: 12px; color: #333; }
+    .template-item-info { font-size: 10px; color: #888; margin-top: 2px; }
+    .template-item-actions { display: flex; gap: 4px; margin-top: 6px; }
+    .template-item-actions button { width: auto; padding: 3px 8px; font-size: 9px; }
+
+    .template-form { background: #fff; border-radius: 8px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e5ec; }
+    .template-form-row { display: flex; gap: 6px; margin-bottom: 6px; }
+    .template-form-row > div { flex: 1; }
+    .template-form-row label { font-size: 9px; }
+    .template-form-row input { font-size: 10px; padding: 5px 7px; }
+
+    /* Export/Import */
+    .import-export-row { display: flex; gap: 6px; margin-top: 8px; }
+    .import-export-row button { flex: 1; }
   </style>
 </head>
 <body>
   <div class="tabs">
     <div class="tab active" data-tab="settings">Settings</div>
-    <div class="tab" data-tab="history">History</div>
+    <div class="tab" data-tab="domains">Domains</div>
+    <div class="tab" data-tab="templates">Templates</div>
     <div class="tab" data-tab="tools">Tools</div>
     <div class="tab" data-tab="price">Price</div>
   </div>
-  
+
   <!-- Settings Tab -->
   <div id="settings" class="tab-content active">
     <h3>Default Settings</h3>
-    
+
     <div class="form-group">
       <label for="email">Email</label>
       <input type="email" id="email" placeholder="agent@mail.ru">
       <div id="email-error" class="field-error"></div>
     </div>
-    
+
     <div class="form-group">
       <label for="phone">Phone</label>
       <input type="text" id="phone" placeholder="7771234567">
@@ -515,48 +323,99 @@
       <input type="checkbox" id="autoFill">
       <label for="autoFill">Auto-fill without preview</label>
     </div>
-    
+
     <button id="saveBtn">Save Settings</button>
     <div id="msg" class="msg"></div>
-    
+
     <div class="section-title">Updates</div>
-    
     <button id="checkUpdateBtn" class="secondary">Check for Updates</button>
     <div id="updateStatus" class="update-status"></div>
-    
+
+    <div class="section-title">Data</div>
+    <div class="import-export-row">
+      <button id="exportBtn" class="secondary">Export Settings</button>
+      <button id="importBtn" class="secondary">Import Settings</button>
+    </div>
+    <input type="file" id="importFile" accept=".json" style="display:none">
+
     <div class="version-info">
-      Version <span id="version">-</span> | 
+      Version <span id="version">-</span> |
       <a href="https://github.com/mansur54321/passport-autofill/releases" target="_blank">Releases</a>
     </div>
   </div>
-  
-  <!-- History Tab -->
-  <div id="history" class="tab-content">
-    <div class="history-header">
-      <h3>Fill History</h3>
-      <div class="history-stats"><span id="historyCount">0</span> operations</div>
+
+  <!-- Domains Tab -->
+  <div id="domains" class="tab-content">
+    <h3>Supported Domains</h3>
+    <div class="tips-box" style="margin-bottom:10px;">
+      <h4>Info</h4>
+      <ul>
+        <li>Default domains cannot be removed</li>
+        <li>Add custom domains when operators change subdomains</li>
+        <li>Pattern format: *://*.example.com/*</li>
+      </ul>
     </div>
-    
-    <div id="historyList" class="history-list">
-      <div class="history-empty">
-        <div class="history-empty-icon">📋</div>
-        <div>No history yet</div>
-      </div>
-    </div>
-    
-    <div class="btn-row" style="margin-top:12px;">
-      <button id="exportHistoryBtn" class="secondary">Export CSV</button>
-      <button id="clearHistoryBtn" class="secondary" style="background:#ef5350;">Clear</button>
+    <div id="domainList"></div>
+    <div class="add-domain-row">
+      <input type="text" id="newDomainPattern" placeholder="*://*.example.com/*">
+      <select id="newDomainSite">
+        <option value="fstravel">Fstravel</option>
+        <option value="kompastour">Kompastour</option>
+        <option value="kazunion">KazUnion</option>
+      </select>
+      <button id="addDomainBtn">Add</button>
     </div>
   </div>
-  
+
+  <!-- Templates Tab -->
+  <div id="templates" class="tab-content">
+    <h3>Tourist Templates</h3>
+    <div class="tips-box" style="margin-bottom:10px;">
+      <h4>Info</h4>
+      <ul>
+        <li>Save tourist data for quick fill without PDF</li>
+        <li>Click template to fill on current page</li>
+        <li>Ctrl+Shift+P to open file dialog</li>
+      </ul>
+    </div>
+
+    <div class="template-form">
+      <div class="template-form-row">
+        <div><label>Name</label><input type="text" id="tplName" placeholder="Template name"></div>
+      </div>
+      <div class="template-form-row">
+        <div><label>Surname</label><input type="text" id="tplSurname"></div>
+        <div><label>Given Name</label><input type="text" id="tplGivenName"></div>
+      </div>
+      <div class="template-form-row">
+        <div><label>Passport N</label><input type="text" id="tplPassport"></div>
+        <div><label>IIN</label><input type="text" id="tplIIN" maxlength="12"></div>
+      </div>
+      <div class="template-form-row">
+        <div><label>Birth Date</label><input type="text" id="tplBirth" placeholder="DD.MM.YYYY"></div>
+        <div><label>Valid Until</label><input type="text" id="tplValid" placeholder="DD.MM.YYYY"></div>
+      </div>
+      <div class="template-form-row">
+        <div><label>Gender</label>
+          <select id="tplGender"><option value="1">Male</option><option value="0">Female</option></select>
+        </div>
+        <div><label>Email</label><input type="email" id="tplEmail"></div>
+      </div>
+      <div class="template-form-row">
+        <div><label>Phone</label><input type="text" id="tplPhone"></div>
+      </div>
+      <button id="saveTemplateBtn" class="success">Save Template</button>
+    </div>
+
+    <div id="templateList"></div>
+  </div>
+
   <!-- Tools Tab -->
   <div id="tools" class="tab-content">
     <h3>Travel Agent Tools</h3>
-    
-    <!-- IIN Validator -->
+
     <div class="tool-panel">
-      <h4>🔍 IIN Validator</h4>
+      <h4>IIN Validator</h4>
       <div class="form-group">
         <label for="iinInput">IIN (12 digits)</label>
         <input type="text" id="iinInput" placeholder="000000000000" maxlength="12">
@@ -564,10 +423,9 @@
       <button id="validateIinBtn">Validate IIN</button>
       <div id="iinResult" class="tool-result"></div>
     </div>
-    
-    <!-- Passport Checker -->
+
     <div class="tool-panel">
-      <h4>🛂 Passport Validity</h4>
+      <h4>Passport Validity</h4>
       <div class="form-group">
         <label for="passportExpiry">Expiry Date</label>
         <input type="text" id="passportExpiry" placeholder="DD.MM.YYYY">
@@ -575,10 +433,9 @@
       <button id="checkPassportBtn">Check Validity</button>
       <div id="passportResult" class="tool-result"></div>
     </div>
-    
-    <!-- Age Calculator -->
+
     <div class="tool-panel">
-      <h4>🎂 Age Calculator</h4>
+      <h4>Age Calculator</h4>
       <div class="form-group">
         <label for="birthDateInput">Birth Date</label>
         <input type="text" id="birthDateInput" placeholder="DD.MM.YYYY">
@@ -586,10 +443,9 @@
       <button id="calcAgeBtn">Calculate Age</button>
       <div id="ageResult" class="tool-result"></div>
     </div>
-    
-    <!-- Transliteration -->
+
     <div class="tool-panel">
-      <h4>🔤 Transliteration</h4>
+      <h4>Transliteration</h4>
       <div class="form-group">
         <label for="cyrillicInput">Cyrillic Text</label>
         <input type="text" id="cyrillicInput" placeholder="Иванов Иван">
@@ -597,47 +453,28 @@
       <button id="translitBtn">Transliterate</button>
       <div id="translitResult" class="tool-result"></div>
     </div>
-    
-    <!-- Quick Actions -->
+
     <div class="quick-actions">
       <h4>Quick Actions</h4>
-      <button class="quick-btn" id="copyEmailBtn">
-        <span class="quick-btn-icon">📧</span>
-        <span>Copy default email</span>
-      </button>
-      <button class="quick-btn" id="copyPhoneBtn">
-        <span class="quick-btn-icon">📱</span>
-        <span>Copy default phone</span>
-      </button>
-    </div>
-    
-    <!-- Tips -->
-    <div class="tips-box">
-      <h4>💡 Tips</h4>
-      <ul>
-        <li>Passport must be valid 6+ months after trip</li>
-        <li>IIN contains birth date and gender info</li>
-        <li>CHD = Child (2-17), INF = Infant (0-2)</li>
-      </ul>
+      <button class="quick-btn" id="copyEmailBtn"><span>Copy default email</span></button>
+      <button class="quick-btn" id="copyPhoneBtn"><span>Copy default phone</span></button>
     </div>
   </div>
-  
-  <!-- Price Monitor Tab -->
+
+  <!-- Price Tab -->
   <div id="price" class="tab-content">
     <h3>Price Monitor</h3>
-    
-    <!-- Currency Rates -->
+
     <div class="tool-panel">
-      <h4>💱 Currency Rates (FUN&SUN)</h4>
+      <h4>Currency Rates (FUN&SUN)</h4>
       <div id="currencyRates" class="currency-rates">
         <div class="currency-loading">Loading rates...</div>
       </div>
-      <button id="refreshRatesBtn" class="secondary" style="margin-top:10px;">Refresh Rates</button>
+      <button id="refreshRatesBtn" class="secondary" style="margin-top:8px;">Refresh Rates</button>
     </div>
-    
-    <!-- Price Calculator -->
+
     <div class="tool-panel">
-      <h4>🧮 Price Calculator</h4>
+      <h4>Price Calculator</h4>
       <div class="form-group">
         <label for="priceInput">Price</label>
         <input type="text" id="priceInput" placeholder="1000">
@@ -656,8 +493,7 @@
       <button id="calcPriceBtn">Convert to KZT</button>
       <div id="priceResult" class="tool-result"></div>
     </div>
-    
-    <!-- Quick Convert -->
+
     <div class="quick-actions">
       <h4>Quick Convert to KZT</h4>
       <div class="quick-convert">
@@ -678,17 +514,9 @@
         </div>
       </div>
     </div>
-    
-    <div class="tips-box">
-      <h4>ℹ️ Info</h4>
-      <ul>
-        <li>Rates from fstravel.asia main page</li>
-        <li>Updated automatically on page load</li>
-        <li>For reference only - confirm with B2B</li>
-      </ul>
-    </div>
   </div>
 
+  <script src="passport-parser.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
