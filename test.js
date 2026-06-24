@@ -195,6 +195,11 @@ console.log('\n=== Firefox Compatibility ===');
     assert(rawCalls.length === 0, file + ' has no direct file.arrayBuffer() calls');
     const blobUrls = code.match(/URL\.createObjectURL\(file/g) || [];
     assert(blobUrls.length === 0, file + ' has no URL.createObjectURL(file) calls');
+    // Check getDocument calls have disableRange (Firefox ReadableStream fix)
+    const getDocCalls = code.match(/getDocument\(\{[^}]*\}\)/g) || [];
+    getDocCalls.forEach(function(call) {
+        assert(call.includes('disableRange'), file + ' getDocument has disableRange: ' + call.substring(0, 60));
+    });
 });
 
 // Check tesseract.min.js exists locally

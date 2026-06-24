@@ -728,7 +728,7 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                 } else {
                     const arrayBuffer = await readFileAsArrayBuffer(files[i]);
                     const copy = new Uint8Array(arrayBuffer);
-                    ensurePdfWorker(); const pdf = await pdfjsLib.getDocument({ data: copy }).promise;
+                    ensurePdfWorker(); const pdf = await pdfjsLib.getDocument({ data: copy, disableRange: true, disableStream: true, isEvalSupported: false }).promise;
                     const page = await pdf.getPage(1);
                     const textContent = await page.getTextContent();
                     fullText = textContent.items.map(item => item.str).join('\n');
@@ -987,7 +987,7 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
             // PDF file
             const arrayBuffer = await readFileAsArrayBuffer(file);
             const copy = new Uint8Array(arrayBuffer);
-            ensurePdfWorker(); const pdf = await pdfjsLib.getDocument({ data: copy }).promise;
+            ensurePdfWorker(); const pdf = await pdfjsLib.getDocument({ data: copy, disableRange: true, disableStream: true, isEvalSupported: false }).promise;
             const page = await pdf.getPage(1);
             const textContent = await page.getTextContent();
             const fullText = textContent.items.map(item => item.str).join('\n');

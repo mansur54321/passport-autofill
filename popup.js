@@ -401,7 +401,7 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                     reader.onerror = reject;
                     reader.readAsArrayBuffer(file);
                 });
-                var pdf = await pdfjs.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+                var pdf = await pdfjs.getDocument({ data: new Uint8Array(arrayBuffer), disableRange: true, disableStream: true, isEvalSupported: false }).promise;
                 var page = await pdf.getPage(1);
                 var textContent = await page.getTextContent();
                 fullText = textContent.items.map(function(item) { return item.str; }).join('\n');
@@ -978,7 +978,7 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                 reader.onerror = reject;
                 reader.readAsArrayBuffer(file);
             });
-            var pdf = await pdfjs.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+            var pdf = await pdfjs.getDocument({ data: new Uint8Array(arrayBuffer), disableRange: true, disableStream: true, isEvalSupported: false }).promise;
             var page = await pdf.getPage(1);
             var textContent = await page.getTextContent();
             var fullText = textContent.items.map(function(item) { return item.str; }).join('\n');
