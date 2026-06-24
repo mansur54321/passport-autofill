@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Passport AutoFill (Multi-Operator)",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Auto-fill passport data for travel B2B sites (PDF Drag&Drop, OCR, Templates)",
-  "permissions": ["activeTab", "storage", "scripting", "alarms", "notifications", "tabs", "webNavigation"],
+  "permissions": ["activeTab", "storage", "scripting", "alarms", "notifications", "tabs"],
   "host_permissions": [
     "*://*.fstravel.asia/*",
     "*://*.fstravel.com/*",
@@ -19,10 +19,9 @@
     "https://api.exchangerate-api.com/*",
     "https://open.er-api.com/*",
     "file://*/*",
-    "https://api.github.com/*",
-    "https://cdn.jsdelivr.net/*"
+    "https://api.github.com/*"
   ],
-  "optional_host_permissions": [
+  "optional_permissions": [
     "*://*/*"
   ],
   "browser_specific_settings": {
@@ -36,7 +35,7 @@
     "default_icon": "icons/icon.png"
   },
   "background": {
-    "service_worker": "background.js"
+    "scripts": ["lib/pdf.min.js", "lib/utils.js", "i18n.js", "passport-parser.js", "background.js"]
   },
   "content_scripts": [
     {

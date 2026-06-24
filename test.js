@@ -40,8 +40,11 @@ try {
     const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, 'manifest.json'), 'utf8'));
     assert(!!manifest, 'manifest.json parses');
     assertEqual(manifest.manifest_version, 3, 'manifest_version is 3');
+    assertEqual(manifest.version, '0.7.1', 'version is 0.7.1');
     assert(!!manifest.content_scripts, 'has content_scripts');
     assert(!!manifest.background, 'has background');
+    assert(!!manifest.background.scripts, 'source manifest uses Firefox background.scripts');
+    assert(!manifest.background.service_worker, 'source manifest has no Firefox-blocked service_worker');
     assert(!!manifest.action, 'has action');
     assert(!!manifest.permissions, 'has permissions');
     assert(manifest.content_scripts[0].js.includes('lib/pdf.min.js'), 'pdf.min.js in content scripts');
@@ -170,6 +173,7 @@ assert(popupHtml.includes('i18n.js'), 'popup.html references i18n.js');
 assert(popupHtml.includes('passport-parser.js'), 'popup.html references passport-parser.js');
 assert(popupHtml.includes('popup.js'), 'popup.html references popup.js');
 assert(!popupHtml.includes('onclick='), 'popup.html has no inline onclick (CSP safe)');
+assert(!popupHtml.includes('id="importFile"'), 'popup.html does not rely on hidden import input');
 
 // Check no old file paths
 console.log('\n=== File Paths ===');
@@ -202,6 +206,24 @@ console.log('\n=== Firefox Compatibility ===');
     });
 });
 
+const contentCode = fs.readFileSync(path.join(__dirname, 'content.js'), 'utf8');
+assert(!contentCode.includes('Array.from(new Uint8Array(reader.result))'), 'content.js does not copy PDF bytes into huge arrays');
+assert(contentCode.includes("typeof response.text === 'string'"), 'content.js accepts empty background PDF text responses');
+assert(!contentCode.includes('pdf.cleanup().then(() => pdf.destroy())'), 'content.js has no unconditional pdf.cleanup() call');
+assert(contentCode.includes('parsePdfInBackground(files[i])'), 'content.js uses background PDF parsing for Firefox multi-file flow');
+assert(contentCode.includes('globalDropListenersAttached'), 'content.js attaches global drop listeners only once');
+
+const popupCode = fs.readFileSync(path.join(__dirname, 'popup.js'), 'utf8');
+assert(!popupCode.includes("file && file.type === 'application/pdf' || file.type.startsWith('image/')"), 'popup.js file type checks are parenthesized');
+assert(popupCode.includes('document.head.appendChild(script);\n                    await scriptLoaded;'), 'popup.js waits for dynamic script after appending it');
+assert(popupCode.includes("input.addEventListener('change', handleImportFile, { once: true })"), 'popup.js creates a fresh import file input');
+assert(popupCode.includes('chrome.storage.local.set(data'), 'popup.js imports settings directly into local storage');
+assert(!popupCode.includes("action: 'importSettings', settings"), 'popup.js import does not depend on background round-trip');
+
+const backgroundCode = fs.readFileSync(path.join(__dirname, 'background.js'), 'utf8');
+assert(backgroundCode.includes('function extractPdfText(pdf)'), 'background.js extracts PDF text through helper');
+assert(backgroundCode.includes('Math.min(pdf.numPages || 1, 3)'), 'background.js caps PDF pages parsed in background');
+
 // Check tesseract.min.js exists locally
 assert(fs.existsSync(path.join(__dirname, 'lib/tesseract.min.js')), 'lib/tesseract.min.js exists');
 
@@ -209,6 +231,22 @@ assert(fs.existsSync(path.join(__dirname, 'lib/tesseract.min.js')), 'lib/tessera
 const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, 'manifest.json'), 'utf8'));
 assert(manifest.content_scripts[0].js.includes('lib/tesseract.min.js'), 'tesseract in content_scripts');
 assert(manifest.web_accessible_resources[0].resources.includes('lib/tesseract.min.js'), 'tesseract in web_accessible_resources');
+assert(!JSON.stringify(manifest).includes('cdn.jsdelivr.net'), 'manifest has no CDN host permissions');
+
+console.log('\n=== Build Manifests ===');
+try {
+    require('child_process').execFileSync(process.execPath, [path.join(__dirname, 'build.js')], { cwd: __dirname, stdio: 'pipe' });
+    const chromeManifest = JSON.parse(fs.readFileSync(path.join(__dirname, 'dist/chrome/manifest.json'), 'utf8'));
+    const firefoxManifest = JSON.parse(fs.readFileSync(path.join(__dirname, 'dist/firefox/manifest.json'), 'utf8'));
+    assert(!!chromeManifest.background.service_worker, 'Chrome build uses background.service_worker');
+    assert(!chromeManifest.background.scripts, 'Chrome build has no background.scripts');
+    assert(!!firefoxManifest.background.scripts, 'Firefox build uses background.scripts');
+    assert(!firefoxManifest.background.service_worker, 'Firefox build has no background.service_worker');
+    assert(!firefoxManifest.permissions.includes('webNavigation'), 'Firefox build has no webNavigation permission');
+} catch(e) {
+    failed++;
+    console.error('  FAIL: build manifest checks: ' + e.message);
+}
 console.log('\n=== Results ===');
 console.log('Passed: ' + passed);
 console.log('Failed: ' + failed);

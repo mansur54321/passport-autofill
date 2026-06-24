@@ -348,12 +348,12 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
             e.preventDefault();
             dropZone.classList.remove('dragover');
             var file = e.dataTransfer.files[0];
-            if (file && file.type === 'application/pdf' || file.type.startsWith('image/')) parsePdfToTemplate(file);
+            if (file && (file.type === 'application/pdf' || file.type.startsWith('image/'))) parsePdfToTemplate(file);
         });
 
         fileInput.addEventListener('change', function(e) {
             var file = e.target.files[0];
-            if (file && file.type === 'application/pdf' || file.type.startsWith('image/')) parsePdfToTemplate(file);
+            if (file && (file.type === 'application/pdf' || file.type.startsWith('image/'))) parsePdfToTemplate(file);
             e.target.value = '';
         });
     }
@@ -362,7 +362,7 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
         try {
             var fullText = '';
             if (file.type.startsWith('image/')) {
-                // Image OCR — use Tesseract from CDN
+                // Image OCR
                 showToast('Scanning photo...');
                 var img = new Image();
                 img.src = await new Promise(function(resolve, reject) {
@@ -373,12 +373,12 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                 });
                 await new Promise(function(resolve, reject) { img.onload = resolve; img.onerror = reject; });
                 
-                // Load Tesseract from CDN
                 if (typeof Tesseract === 'undefined') {
                     var script = document.createElement('script');
                     script.src = chrome.runtime.getURL('lib/tesseract.min.js');
-                    await new Promise(function(resolve, reject) { script.onload = resolve; script.onerror = reject; });
+                    var scriptLoaded = new Promise(function(resolve, reject) { script.onload = resolve; script.onerror = reject; });
                     document.head.appendChild(script);
+                    await scriptLoaded;
                 }
                 
                 var worker = await Tesseract.createWorker('eng');
@@ -402,10 +402,14 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                     reader.readAsArrayBuffer(file);
                 });
                 var pdf = await pdfjs.getDocument({ data: new Uint8Array(arrayBuffer), disableRange: true, disableStream: true, isEvalSupported: false }).promise;
-                var page = await pdf.getPage(1);
-                var textContent = await page.getTextContent();
-                fullText = textContent.items.map(function(item) { return item.str; }).join('\n');
-                await pdf.destroy();
+                try {
+                    var page = await pdf.getPage(1);
+                    var textContent = await page.getTextContent();
+                    fullText = textContent.items.map(function(item) { return item.str; }).join('\n');
+                } finally {
+                    if (pdf && typeof pdf.cleanup === 'function') await pdf.cleanup();
+                    if (pdf && typeof pdf.destroy === 'function') await pdf.destroy();
+                }
             }
 
             var parsed = PassportParser.parse(fullText);
@@ -820,7 +824,15 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
         });
     }
 
-    function importSettings() { document.getElementById('importFile').click(); }
+    function importSettings() {
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json,application/json';
+        input.style.display = 'none';
+        input.addEventListener('change', handleImportFile, { once: true });
+        document.body.appendChild(input);
+        input.click();
+    }
 
     function exportCSV() {
         chrome.runtime.sendMessage({ action: 'exportCSV' }, function(resp) {
@@ -835,26 +847,41 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
     }
 
     function handleImportFile(e) {
-        var file = e.target.files[0];
+        var input = e.target;
+        var file = input.files[0];
         if (!file) return;
         var reader = new FileReader();
         reader.onload = function(ev) {
             try {
-                var settings = JSON.parse(ev.target.result);
-                chrome.runtime.sendMessage({ action: 'importSettings', settings: settings }, function(res) {
-                    if (res && res.success) {
+                var imported = JSON.parse(ev.target.result);
+                var data = imported && imported.data ? imported.data : imported;
+                if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                    showMsg(t('invalid_json'), 'error');
+                    return;
+                }
+
+                chrome.storage.local.set(data, function() {
+                    if (chrome.runtime.lastError) {
+                        showMsg(chrome.runtime.lastError.message || t('import_failed'), 'error');
+                    } else {
                         showMsg(t('settings_imported'), 'success');
                         loadSettings();
-                    } else {
-                        showMsg(res ? res.error : t('import_failed'), 'error');
+                        loadDomains();
+                        loadCredentials();
                     }
                 });
             } catch (err) {
                 showMsg(t('invalid_json'), 'error');
+            } finally {
+                if (input && input.parentNode) input.parentNode.removeChild(input);
             }
         };
+        reader.onerror = function() {
+            showMsg(t('import_failed'), 'error');
+            if (input && input.parentNode) input.parentNode.removeChild(input);
+        };
         reader.readAsText(file);
-        e.target.value = '';
+        input.value = '';
     }
 
     /* ==================== UTILITIES ==================== */
@@ -944,12 +971,12 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
             e.preventDefault();
             dropZone.classList.remove('dragover');
             var file = e.dataTransfer.files[0];
-            if (file && file.type === 'application/pdf' || file.type.startsWith('image/')) parsePdfToTools(file);
+            if (file && (file.type === 'application/pdf' || file.type.startsWith('image/'))) parsePdfToTools(file);
         });
 
         fileInput.addEventListener('change', function(e) {
             var file = e.target.files[0];
-            if (file && file.type === 'application/pdf' || file.type.startsWith('image/')) parsePdfToTools(file);
+            if (file && (file.type === 'application/pdf' || file.type.startsWith('image/'))) parsePdfToTools(file);
             e.target.value = '';
         });
     }
@@ -979,9 +1006,15 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                 reader.readAsArrayBuffer(file);
             });
             var pdf = await pdfjs.getDocument({ data: new Uint8Array(arrayBuffer), disableRange: true, disableStream: true, isEvalSupported: false }).promise;
-            var page = await pdf.getPage(1);
-            var textContent = await page.getTextContent();
-            var fullText = textContent.items.map(function(item) { return item.str; }).join('\n');
+            var fullText = '';
+            try {
+                var page = await pdf.getPage(1);
+                var textContent = await page.getTextContent();
+                fullText = textContent.items.map(function(item) { return item.str; }).join('\n');
+            } finally {
+                if (pdf && typeof pdf.cleanup === 'function') await pdf.cleanup();
+                if (pdf && typeof pdf.destroy === 'function') await pdf.destroy();
+            }
             var parsed = PassportParser.parse(fullText);
 
             var iinValid = parsed.iin ? PassportParser.validateIIN(parsed.iin) : false;
@@ -1204,7 +1237,6 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
         document.getElementById('saveTemplateBtn').addEventListener('click', saveTemplate);
         document.getElementById('exportBtn').addEventListener('click', exportSettings);
         document.getElementById('importBtn').addEventListener('click', importSettings);
-        document.getElementById('importFile').addEventListener('change', handleImportFile);
         document.getElementById('exportCsvBtn').addEventListener('click', exportCSV);
         document.getElementById('clearHistoryBtn').addEventListener('click', clearHistory);
         document.getElementById('saveCredBtn').addEventListener('click', saveCredential);

@@ -36,15 +36,14 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
         return new Promise(function(resolve, reject) {
             var reader = new FileReader();
             reader.onload = function() {
-                var bytes = Array.from(new Uint8Array(reader.result));
                 chrome.runtime.sendMessage(
-                    { action: 'parsePdf', data: bytes },
+                    { action: 'parsePdf', data: reader.result },
                     function(response) {
                         if (chrome.runtime.lastError) {
                             reject(new Error(chrome.runtime.lastError.message));
                             return;
                         }
-                        if (response && response.text) {
+                        if (response && typeof response.text === 'string') {
                             resolve(response.text);
                         } else {
                             reject(new Error(response && response.error || 'Background parse failed'));
@@ -62,6 +61,7 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
     let formDetected = false;
     let autoLoginTried = false;
     let lastUsedCred = null;
+    let globalDropListenersAttached = false;
 
     function getOperatorKey() {
         const host = window.location.hostname;
@@ -563,12 +563,15 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
     }
 
     function initDropZones() {
-        ['dragover', 'drop'].forEach(eventName => {
-            document.addEventListener(eventName, (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-            }, false);
-        });
+        if (!globalDropListenersAttached) {
+            ['dragover', 'drop'].forEach(eventName => {
+                document.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+            globalDropListenersAttached = true;
+        }
 
         const touristDivs = Utils.$$('div.tourist');
         console.log('[PassportAutoFill] initDropZones: found', touristDivs.length, 'tourist divs');
@@ -757,15 +760,21 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                 if (files[i].type.startsWith('image/')) {
                     const ocrText = await ocrFromImage(files[i]);
                     fullText = ocrText || '';
+                } else if (isFirefox()) {
+                    fullText = await parsePdfInBackground(files[i]);
                 } else {
                     const arrayBuffer = await readFileAsArrayBuffer(files[i]);
                     const copy = new Uint8Array(arrayBuffer);
-                    ensurePdfWorker(); const pdf = await pdfjsLib.getDocument({ data: copy, disableRange: true, disableStream: true, isEvalSupported: false }).promise;
-                    const page = await pdf.getPage(1);
-                    const textContent = await page.getTextContent();
-                    fullText = textContent.items.map(item => item.str).join('\n');
-                    await pdf.cleanup();
-                    await pdf.destroy();
+                    ensurePdfWorker();
+                    const pdf = await pdfjsLib.getDocument({ data: copy, disableRange: true, disableStream: true, isEvalSupported: false }).promise;
+                    try {
+                        const page = await pdf.getPage(1);
+                        const textContent = await page.getTextContent();
+                        fullText = textContent.items.map(item => item.str).join('\n');
+                    } finally {
+                        if (pdf && typeof pdf.cleanup === 'function') await pdf.cleanup();
+                        if (pdf && typeof pdf.destroy === 'function') await pdf.destroy();
+                    }
                 }
                 const parsed = PassportParser.parse(fullText);
                 parsedResults.push({ parsed, file: files[i] });
@@ -1026,7 +1035,8 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
             } else {
                 const arrayBuffer = await readFileAsArrayBuffer(file);
                 const copy = new Uint8Array(arrayBuffer);
-                ensurePdfWorker(); const pdfDoc = await pdfjsLib.getDocument({ data: copy, disableRange: true, disableStream: true, isEvalSupported: false }).promise;
+                ensurePdfWorker();
+                const pdfDoc = await pdfjsLib.getDocument({ data: copy, disableRange: true, disableStream: true, isEvalSupported: false }).promise;
                 pdf = pdfDoc;
                 const page = await pdf.getPage(1);
                 const textContent = await page.getTextContent();
@@ -1061,7 +1071,13 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                 parsedData.ocrUsed = ocrUsed;
 
                 // Cleanup pdf.js resources
-                pdf.cleanup().then(() => pdf.destroy()).catch(() => {});
+                if (pdf && typeof pdf.cleanup === 'function') {
+                    pdf.cleanup().then(function() {
+                        if (pdf && typeof pdf.destroy === 'function') return pdf.destroy();
+                    }).catch(function() {});
+                } else if (pdf && typeof pdf.destroy === 'function') {
+                    pdf.destroy().catch(function() {});
+                }
 
                 if (defaults.autoFill && parsedData.isValid && !ocrUsed) {
                     fillFormSequentially(parsedData, touristIndex, zoneElement);

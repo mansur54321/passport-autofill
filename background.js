@@ -524,6 +524,24 @@ if (typeof importScripts === 'function') {
         chrome.action.setBadgeBackgroundColor({ color: color, tabId: tabId });
     }
 
+    function extractPdfText(pdf) {
+        var pages = [];
+        var count = Math.min(pdf.numPages || 1, 3);
+        var chain = Promise.resolve();
+
+        for (let pageNum = 1; pageNum <= count; pageNum++) {
+            chain = chain.then(function() {
+                return pdf.getPage(pageNum).then(function(page) {
+                    return page.getTextContent();
+                }).then(function(textContent) {
+                    pages.push(textContent.items.map(function(item) { return item.str; }).join('\n'));
+                });
+            });
+        }
+
+        return chain.then(function() { return pages.join('\n'); });
+    }
+
     /* ==================== MESSAGE HANDLER ==================== */
 
     chrome.runtime.onInstalled.addListener(function(details) {
@@ -591,6 +609,10 @@ if (typeof importScripts === 'function') {
             // Firefox: content scripts can't use ReadableStream (PDF.js needs it)
             // Parse PDF in background where there are no CSP restrictions
             try {
+                if (!message.data) {
+                    sendResponse({ error: 'No PDF data received' });
+                    return false;
+                }
                 var bytes = new Uint8Array(message.data);
                 if (typeof pdfjsLib === 'undefined' && typeof importScripts === 'function') {
                     importScripts('lib/pdf.min.js');
@@ -607,12 +629,10 @@ if (typeof importScripts === 'function') {
                 }
                 pdfjsLib.getDocument({ data: bytes, disableRange: true, disableStream: true, isEvalSupported: false }).promise
                     .then(function(pdf) {
-                        return pdf.getPage(1).then(function(page) {
-                            return page.getTextContent();
-                        }).then(function(textContent) {
-                            var text = textContent.items.map(function(item) { return item.str; }).join('\n');
-                            pdf.destroy();
+                        return extractPdfText(pdf).then(function(text) {
                             sendResponse({ text: text });
+                        }).finally(function() {
+                            if (pdf && typeof pdf.destroy === 'function') pdf.destroy();
                         });
                     })
                     .catch(function(err) {

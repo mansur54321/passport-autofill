@@ -23,6 +23,12 @@ function buildChrome() {
 
     const manifest = JSON.parse(fs.readFileSync(path.join(SRC, 'manifest.json'), 'utf8'));
     delete manifest.browser_specific_settings;
+    manifest.background = { service_worker: 'background.js' };
+    manifest.permissions = manifest.permissions.concat(['webNavigation']);
+    if (manifest.optional_permissions) {
+        manifest.optional_host_permissions = manifest.optional_permissions;
+        delete manifest.optional_permissions;
+    }
 
     fs.writeFileSync(
         path.join(out, 'manifest.json'),
@@ -43,18 +49,12 @@ function buildFirefox() {
 
     const manifest = JSON.parse(fs.readFileSync(path.join(SRC, 'manifest.json'), 'utf8'));
 
-    // Firefox MV3 differences:
-    // 1. background.scripts instead of background.service_worker
-    manifest.background = { scripts: ['lib/pdf.min.js', 'lib/utils.js', 'i18n.js', 'passport-parser.js', 'background.js'] };
-
-    // 2. Remove webNavigation (not available in Firefox MV3)
-    manifest.permissions = manifest.permissions.filter(p => p !== 'webNavigation');
-
-    // 3. optional_host_permissions -> not supported in Firefox, use optional_permissions
-    if (manifest.optional_host_permissions) {
-        manifest.optional_permissions = manifest.optional_host_permissions;
-        delete manifest.optional_host_permissions;
+    if (manifest.background && manifest.background.service_worker) {
+        delete manifest.background.service_worker;
     }
+    manifest.background = { scripts: ['lib/pdf.min.js', 'lib/utils.js', 'i18n.js', 'passport-parser.js', 'background.js'] };
+    manifest.permissions = manifest.permissions.filter(p => p !== 'webNavigation');
+    if (manifest.optional_host_permissions) delete manifest.optional_host_permissions;
 
     // 4. web_accessible_resources — Firefox uses different format
     // MV3 format with matches works in Firefox 109+
