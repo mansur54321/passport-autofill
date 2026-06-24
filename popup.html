@@ -1,269 +1,242 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
   <meta charset="utf-8">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    :root {
+      --s1: #c66b3d;
+      --s2: #b8854f;
+      --s3: #d4a06a;
+      --bg: #f5ede0;
+      --surface: #fffaf2;
+      --foam: #fffaf2;
+      --text: #1a0f0a;
+      --text-muted: #6b5a48;
+      --border: #d4c4a8;
+      --border-soft: #e0d4be;
+      --success: #5a7c4f;
+      --warning: #c69738;
+      --danger: #a0392b;
+      --shadow: 0 1px 4px rgba(74, 53, 40, 0.1);
+      --shadow-hover: 0 4px 16px rgba(74, 53, 40, 0.15);
+      --r: 4px;
+      --r-lg: 8px;
+      --t: all 0.25s ease;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a0f0a;
+        --surface: #2b1d16;
+        --foam: #2b1d16;
+        --text: #f5ede0;
+        --text-muted: #b0a090;
+        --border: #4a3528;
+        --border-soft: #3a2820;
+        --shadow: 0 1px 4px rgba(0,0,0,0.3);
+        --shadow-hover: 0 4px 16px rgba(0,0,0,0.4);
+      }
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       width: 400px;
-      min-height: 480px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f5f7fa;
+      min-height: 500px;
+      font-family: 'Newsreader', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.5;
     }
 
-    @media (prefers-color-scheme: dark) {
-      body { background: #1a1a2e; color: #e0e0e0; }
-      .tabs { background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%); }
-      h3 { color: #90cdf4; }
-      h3::before { background: #90cdf4; }
-      label { color: #a0aec0; }
-      input, select { background: #2d3748; border-color: #4a5568; color: #e0e0e0; }
-      input:focus, select:focus { border-color: #90cdf4; box-shadow: 0 0 0 3px rgba(144,205,244,0.15); }
-      input.error { background: #3b1c1c; border-color: #fc8181; }
-      input.success { background: #1c3b2e; border-color: #68d391; }
-      input.warning { background: #3b3b1c; border-color: #f6e05e; }
-      button { background: #4a5568; }
-      button:hover { background: #718096; }
-      .tab-content { background: #1a1a2e; }
-      .tool-panel, .quick-actions, .checkbox-group { background: #2d3748; border-color: #4a5568; }
-      .tool-panel h4, .quick-actions h4 { color: #e0e0e0; }
-      .history-item { background: #2d3748; border-color: #4a5568; }
-      .history-item-site { color: #90cdf4; }
-      .msg.success { background: #1c3b2e; color: #68d391; }
-      .msg.error { background: #3b1c1c; color: #fc8181; }
-      .version-info { color: #718096; }
-      .version-info a { color: #90cdf4; }
-      .field-error { color: #fc8181; }
-      .section-title { color: #718096; border-bottom-color: #4a5568; }
-      .domain-item { background: #2d3748; border-color: #4a5568; }
-      .template-item { background: #2d3748; border-color: #4a5568; }
-      .tips-box { background: linear-gradient(135deg, #3b3b1c 0%, #2d3748 100%); border-color: #4a5568; }
-      .tips-box h4 { color: #f6e05e; }
-      .update-status.checking { background: #3b3b1c; color: #f6e05e; }
-      .update-status.available { background: #1c3b2e; color: #68d391; }
-      .update-status.uptodate { background: #2d3748; color: #90cdf4; }
-      .update-status.error { background: #3b1c1c; color: #fc8181; }
-      .currency-item { background: #2d3748; border-color: #4a5568; }
-      .currency-item-code { color: #90cdf4; }
-      .currency-item-rate { color: #e0e0e0; }
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.17 0 0 0 0 0.11 0 0 0 0 0.07 0 0 0 0.03 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.4;
     }
 
-    .tabs {
-      display: flex;
-      background: linear-gradient(135deg, #366383 0%, #2d5270 100%);
+    @keyframes seasonShift {
+      0%,100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    .season-bar {
+      height: 3px;
+      background: linear-gradient(90deg, var(--s1), var(--s2), var(--s3), var(--s2), var(--s1));
+      background-size: 300% 100%;
+      animation: seasonShift 8s ease-in-out infinite;
+      position: relative; z-index: 1;
     }
 
+    .header {
+      background: var(--surface);
+      padding: 14px 16px 0;
+      border-bottom: 2px solid var(--border);
+      position: relative; z-index: 1;
+    }
+
+    .header-top {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .header-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 20px; font-weight: 400; letter-spacing: -0.5px;
+      color: var(--text); line-height: 1.1;
+    }
+    .header-title em { font-style: italic; color: var(--s1); }
+
+    .header-actions {
+      display: flex; gap: 6px; align-items: center;
+    }
+
+    .icon-btn {
+      width: 28px; height: 28px; border: 1px solid var(--border);
+      border-radius: var(--r); background: var(--bg); cursor: pointer;
+      font-size: 14px; color: var(--text-muted); transition: var(--t);
+      display: flex; align-items: center; justify-content: center;
+      padding: 0; font-family: inherit;
+    }
+    .icon-btn:hover { border-color: var(--s1); color: var(--s1); background: var(--surface); }
+    .icon-btn.copied { background: var(--success); color: white; border-color: var(--success); }
+
+    .lang-switch { display: flex; border: 1px solid var(--border); border-radius: var(--r); }
+    .lang-btn {
+      padding: 3px 8px; border: none; cursor: pointer;
+      font-size: 10px; font-weight: 600; font-family: 'JetBrains Mono', monospace;
+      background: transparent; color: var(--text-muted); transition: var(--t); width: auto;
+    }
+    .lang-btn:first-child { border-radius: 3px 0 0 3px; }
+    .lang-btn:last-child { border-radius: 0 3px 3px 0; }
+    .lang-btn.active { background: var(--s1); color: var(--foam); }
+
+    .tabs { display: flex; border-top: 1px solid var(--border); }
     .tab {
-      flex: 1;
-      padding: 10px 4px;
-      text-align: center;
-      color: rgba(255,255,255,0.7);
-      cursor: pointer;
-      font-size: 11px;
-      font-weight: 600;
-      border-bottom: 3px solid transparent;
-      transition: all 0.2s;
+      flex: 1; padding: 8px 2px; text-align: center; color: var(--text-muted);
+      cursor: pointer; font-size: 10px; font-weight: 500;
+      border-bottom: 2px solid transparent; transition: var(--t);
+      font-family: 'Newsreader', serif;
     }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--s1); border-bottom-color: var(--s1); font-weight: 600; }
 
-    .tab:hover { color: #fff; background: rgba(255,255,255,0.1); }
-    .tab.active { color: #fff; border-bottom-color: #4fc3f7; }
-
-    .tab-content { display: none; padding: 12px; }
-    .tab-content.active { display: block; }
+    .tab-content { display: none; padding: 16px; position: relative; z-index: 1; }
+    .tab-content.active { display: block; animation: fadeInUp 0.3s ease; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
     h3 {
-      margin: 0 0 10px 0;
-      color: #366383;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      margin: 0 0 12px 0; font-family: 'DM Serif Display', serif;
+      font-size: 15px; font-weight: 400; color: var(--text);
+      display: flex; align-items: center; gap: 8px;
+      padding-bottom: 6px; border-bottom: 1px solid var(--border);
     }
-
-    h3::before {
-      content: '';
-      width: 4px;
-      height: 14px;
-      background: #366383;
-      border-radius: 2px;
-    }
+    h3::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--s1); flex-shrink: 0; }
 
     .form-group { margin-bottom: 10px; }
-
     label {
-      display: block;
-      font-size: 10px;
-      margin-bottom: 3px;
-      font-weight: 600;
-      color: #555;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      display: block; font-size: 10px; margin-bottom: 4px; font-weight: 600;
+      color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;
+      font-family: 'JetBrains Mono', monospace;
     }
 
     input, select {
-      width: 100%;
-      padding: 8px 10px;
-      border: 2px solid #e0e5ec;
-      border-radius: 6px;
-      font-size: 12px;
-      transition: all 0.2s;
-      background: #fff;
+      width: 100%; padding: 8px 11px; border: 1px solid var(--border);
+      border-radius: var(--r); font-size: 12px; font-family: 'Newsreader', Georgia, serif;
+      font-weight: 400; transition: var(--t); background: var(--foam); color: var(--text);
     }
-
+    input::placeholder { color: var(--text-muted); opacity: 0.7; }
     input:focus, select:focus {
-      outline: none;
-      border-color: #366383;
-      box-shadow: 0 0 0 3px rgba(54,99,131,0.1);
+      outline: none; border-color: var(--s1);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--s1) 15%, transparent);
     }
+    input.error { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 8%, var(--foam)); }
+    input.success { border-color: var(--success); background: color-mix(in srgb, var(--success) 8%, var(--foam)); }
+    input.warning { border-color: var(--warning); background: color-mix(in srgb, var(--warning) 8%, var(--foam)); }
 
-    input.error { border-color: #ef5350; background: #ffebee; }
-    input.success { border-color: #66bb6a; background: #e8f5e9; }
-    input.warning { border-color: #ffa726; background: #fff3e0; }
-
-    .field-hint { font-size: 10px; color: #888; margin-top: 2px; }
-    .field-error { font-size: 10px; color: #d32f2f; margin-top: 3px; display: none; font-weight: 500; }
+    .field-hint { font-size: 10px; color: var(--text-muted); margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
+    .field-error { font-size: 10px; color: var(--danger); margin-top: 3px; display: none; font-weight: 500; }
     .field-error.show { display: block; }
 
     button {
-      width: 100%;
-      padding: 8px 14px;
-      background: #366383;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 12px;
-      transition: all 0.2s;
+      width: 100%; padding: 9px 14px;
+      background: var(--s1); color: var(--foam);
+      border: none; border-radius: var(--r);
+      cursor: pointer; font-weight: 600; font-size: 11px; font-family: 'JetBrains Mono', monospace;
+      transition: var(--t); letter-spacing: 0.5px; text-transform: uppercase;
     }
-
-    button:hover { background: #2d5270; transform: translateY(-1px); }
+    button:hover { background: var(--s2); transform: translateY(-1px); box-shadow: var(--shadow-hover); }
     button:active { transform: translateY(0); }
-    button:disabled { background: #adb5bd; cursor: not-allowed; transform: none; }
-    button.secondary { background: #78909c; }
-    button.secondary:hover { background: #607d8b; }
-    button.success { background: #43a047; }
-    button.success:hover { background: #388e3c; }
-    button.danger { background: #ef5350; }
-    button.danger:hover { background: #d32f2f; }
+    button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    button.secondary { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+    button.secondary:hover { background: var(--border); color: var(--text); }
+    button.success { background: var(--success); }
+    button.success:hover { background: #4a6840; }
+    button.danger { background: var(--danger); }
 
-    .checkbox-group {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
-      padding: 6px;
-      background: #fff;
-      border-radius: 6px;
-      border: 1px solid #e0e5ec;
-    }
+    .checkbox-group { display: flex; align-items: center; margin-bottom: 10px; padding: 7px 10px; background: var(--foam); border-radius: var(--r); border: 1px solid var(--border); }
+    .checkbox-group:hover { border-color: var(--s1); }
+    .checkbox-group input[type="checkbox"] { width: 16px; height: 16px; margin-right: 8px; accent-color: var(--s1); }
+    .checkbox-group label { margin: 0; font-weight: 400; cursor: pointer; text-transform: none; font-size: 12px; color: var(--text); font-family: 'Newsreader', serif; letter-spacing: 0; }
 
-    .checkbox-group input[type="checkbox"] { width: 16px; height: 16px; margin-right: 8px; }
-    .checkbox-group label { margin: 0; font-weight: normal; cursor: pointer; text-transform: none; }
+    .msg { font-size: 11px; padding: 7px 11px; border-radius: var(--r); margin-top: 8px; display: none; font-weight: 500; }
+    .msg.success { background: color-mix(in srgb, var(--success) 15%, transparent); color: var(--success); display: block; }
+    .msg.error { background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--danger); display: block; }
 
-    .msg { font-size: 11px; padding: 8px; border-radius: 6px; margin-top: 8px; display: none; }
-    .msg.success { background: #d4edda; color: #155724; display: block; }
-    .msg.error { background: #f8d7da; color: #721c24; display: block; }
+    .update-status { padding: 7px 11px; border-radius: var(--r); font-size: 11px; margin-top: 8px; display: none; font-weight: 500; }
+    .update-status.checking { display: block; background: color-mix(in srgb, var(--warning) 15%, transparent); color: var(--warning); }
+    .update-status.available { display: block; background: color-mix(in srgb, var(--success) 15%, transparent); color: var(--success); }
+    .update-status.uptodate { display: block; background: color-mix(in srgb, var(--s1) 15%, transparent); color: var(--s1); }
+    .update-status.error { display: block; background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--danger); }
 
-    .update-status { padding: 8px; border-radius: 6px; font-size: 11px; margin-top: 8px; display: none; }
-    .update-status.checking { display: block; background: #fff3cd; color: #856404; }
-    .update-status.available { display: block; background: #d4edda; color: #155724; }
-    .update-status.uptodate { display: block; background: #e3f2fd; color: #1565c0; }
-    .update-status.error { display: block; background: #f8d7da; color: #721c24; }
+    .version-info { margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 10px; color: var(--text-muted); text-align: center; font-family: 'JetBrains Mono', monospace; }
+    .version-info a { color: var(--s1); text-decoration: none; font-weight: 500; }
 
-    .version-info { margin-top: 12px; padding-top: 8px; border-top: 1px solid #e0e5ec; font-size: 10px; color: #888; text-align: center; }
-    .version-info a { color: #366383; text-decoration: none; }
-    .version-info a:hover { text-decoration: underline; }
+    .section-title { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin: 12px 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid var(--border); font-weight: 600; font-family: 'JetBrains Mono', monospace; }
 
-    .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .history-stats { font-size: 10px; color: #888; }
-    .history-list { max-height: 300px; overflow-y: auto; }
-
-    .history-item {
-      background: #fff; border-radius: 8px; padding: 10px; margin-bottom: 6px;
-      border: 1px solid #e0e5ec; transition: all 0.2s;
-    }
-    .history-item:hover { border-color: #366383; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
-    .history-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-    .history-item-site { font-weight: 600; color: #366383; font-size: 11px; }
-    .history-item-time { font-size: 9px; color: #999; }
-    .history-item-data { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; font-size: 10px; }
-    .history-item-data dt { color: #888; }
-    .history-item-data dd { color: #333; font-weight: 500; }
-    .history-item-status { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 600; margin-top: 6px; }
-    .history-item-status.success { background: #e8f5e9; color: #2e7d32; }
-    .history-item-status.warning { background: #fff3e0; color: #ef6c00; }
-    .history-item-status.error { background: #ffebee; color: #c62828; }
-    .history-empty { text-align: center; padding: 30px; color: #aaa; }
-
-    .tool-panel { background: #fff; border-radius: 10px; padding: 12px; margin-bottom: 10px; border: 1px solid #e0e5ec; }
-    .tool-panel h4 { font-size: 12px; color: #333; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-    .tool-result { padding: 10px; border-radius: 6px; font-size: 11px; margin-top: 8px; display: none; }
-    .tool-result.show { display: block; }
-    .tool-result.success { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
-    .tool-result.error { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
-    .tool-result.warning { background: #fff3e0; color: #ef6c00; border: 1px solid #ffcc80; }
-    .tool-result.info { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
-    .tool-result-title { font-weight: 600; margin-bottom: 4px; }
+    .tool-panel { background: var(--foam); border-radius: var(--r-lg); padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); transition: var(--t); }
+    .tool-panel h4 { font-size: 13px; color: var(--text); margin-bottom: 8px; font-weight: 600; font-family: 'DM Serif Display', serif; }
+    .tool-result { padding: 9px; border-radius: var(--r); font-size: 12px; margin-top: 8px; display: none; }
+    .tool-result.show { display: block; animation: fadeInUp 0.2s ease; }
+    .tool-result.success { background: color-mix(in srgb, var(--success) 12%, transparent); color: var(--success); border: 1px solid color-mix(in srgb, var(--success) 30%, transparent); }
+    .tool-result.error { background: color-mix(in srgb, var(--danger) 12%, transparent); color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent); }
+    .tool-result.warning { background: color-mix(in srgb, var(--warning) 12%, transparent); color: var(--warning); border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent); }
+    .tool-result.info { background: color-mix(in srgb, var(--s1) 12%, transparent); color: var(--s1); border: 1px solid color-mix(in srgb, var(--s1) 30%, transparent); }
+    .tool-result-title { font-weight: 700; margin-bottom: 4px; font-family: 'DM Serif Display', serif; font-size: 14px; }
     .tool-result-data { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; }
-    .tool-result-data dt { color: #666; }
-    .tool-result-data dd { font-weight: 500; }
+    .tool-result-data dt { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+    .tool-result-data dd { font-weight: 500; color: var(--text); }
 
-    .btn-row { display: flex; gap: 6px; }
-    .btn-row button { flex: 1; }
+    .copy-btn { padding: 4px 9px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r); cursor: pointer; font-size: 10px; color: var(--text-muted); width: auto; font-family: 'JetBrains Mono', monospace; font-weight: 600; transition: var(--t); }
+    .copy-btn:hover { background: var(--border); color: var(--text); }
 
-    .copy-btn {
-      padding: 4px 8px; background: #f5f7fa; border: 1px solid #e0e5ec; border-radius: 4px;
-      cursor: pointer; font-size: 10px; color: #666; width: auto;
-    }
-    .copy-btn:hover { background: #e0e5ec; }
-
-    .quick-actions { background: #fff; border-radius: 10px; padding: 10px; border: 1px solid #e0e5ec; margin-bottom: 10px; }
-    .quick-actions h4 { font-size: 11px; color: #666; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .quick-btn {
-      display: flex; align-items: center; gap: 6px; width: 100%; padding: 8px;
-      background: #f8f9fa; border: 1px solid #e0e5ec; border-radius: 6px; font-size: 11px;
-      color: #333; cursor: pointer; margin-bottom: 4px; text-align: left;
-    }
-    .quick-btn:last-child { margin-bottom: 0; }
-    .quick-btn:hover { background: #e9ecef; }
-
-    .tips-box { background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%); border-radius: 10px; padding: 10px; border: 1px solid #ffe082; }
-    .tips-box h4 { font-size: 11px; color: #f57c00; margin-bottom: 6px; }
-    .tips-box ul { margin: 0; padding-left: 14px; font-size: 10px; color: #666; }
+    .tips-box { background: color-mix(in srgb, var(--warning) 8%, var(--foam)); border-radius: var(--r-lg); padding: 10px; border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent); }
+    .tips-box h4 { font-size: 11px; color: var(--warning); margin-bottom: 5px; font-weight: 600; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; }
+    .tips-box ul { margin: 0; padding-left: 14px; font-size: 11px; color: var(--text-muted); }
     .tips-box li { margin-bottom: 3px; }
 
     .currency-rates { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
-    .currency-item { background: #f8f9fa; border-radius: 6px; padding: 8px; text-align: center; border: 1px solid #e0e5ec; }
-    .currency-item-code { font-weight: 700; color: #366383; font-size: 13px; }
-    .currency-item-rate { font-size: 14px; color: #333; margin-top: 3px; }
-    .currency-date { grid-column: 1 / -1; font-size: 9px; color: #888; text-align: center; margin-top: 4px; }
+    .currency-item { background: var(--bg); border-radius: var(--r); padding: 8px; text-align: center; border: 1px solid var(--border); transition: var(--t); }
+    .currency-item:hover { border-color: var(--s1); }
+    .currency-item-code { font-weight: 700; color: var(--s1); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+    .currency-item-rate { font-size: 14px; color: var(--text); margin-top: 3px; font-weight: 600; font-family: 'DM Serif Display', serif; }
+    .currency-date { grid-column: 1 / -1; font-size: 9px; color: var(--text-muted); text-align: center; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
 
-    .quick-convert { display: flex; flex-direction: column; gap: 8px; }
+    .quick-convert { display: flex; flex-direction: column; gap: 7px; }
     .quick-convert-row { display: flex; align-items: center; gap: 6px; }
-    .qc-currency { width: 36px; font-weight: 700; color: #366383; font-size: 11px; }
+    .qc-currency { width: 36px; font-weight: 700; color: var(--s1); font-size: 11px; font-family: 'JetBrains Mono', monospace; }
     .qc-input { flex: 1; padding: 6px 8px !important; font-size: 12px !important; }
-    .qc-result { min-width: 90px; font-size: 11px; font-weight: 600; color: #2e7d32; text-align: right; }
+    .qc-result { min-width: 90px; font-size: 12px; font-weight: 700; color: var(--success); text-align: right; font-family: 'DM Serif Display', serif; }
 
-    .section-title {
-      font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.5px;
-      margin: 12px 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid #e0e5ec;
-    }
-
-    /* Domains */
-    .domain-item {
-      display: flex; justify-content: space-between; align-items: center;
-      background: #fff; border-radius: 6px; padding: 6px 10px; margin-bottom: 4px;
-      border: 1px solid #e0e5ec; font-size: 11px;
-    }
-    .domain-item .domain-pattern { flex: 1; color: #333; font-family: monospace; font-size: 10px; }
-    .domain-item .domain-site { color: #366383; font-weight: 600; font-size: 10px; margin: 0 8px; }
-    .domain-item .domain-remove {
-      background: none; border: none; color: #ef5350; cursor: pointer; font-size: 14px;
-      width: auto; padding: 0 4px;
-    }
-    .domain-item .domain-remove:hover { color: #c62828; }
-    .domain-item.default { opacity: 0.6; }
+    .domain-item { display: flex; justify-content: space-between; align-items: center; background: var(--foam); border-radius: var(--r); padding: 6px 10px; margin-bottom: 4px; border: 1px solid var(--border); font-size: 11px; transition: var(--t); }
+    .domain-item:hover { border-color: var(--s1); }
+    .domain-item .domain-pattern { flex: 1; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+    .domain-item .domain-site { color: var(--s1); font-weight: 700; font-size: 10px; margin: 0 8px; font-family: 'JetBrains Mono', monospace; }
+    .domain-item .domain-remove { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 14px; width: auto; padding: 0 4px; }
+    .domain-item.default { opacity: 0.5; }
     .domain-item.default .domain-remove { display: none; }
 
     .add-domain-row { display: flex; gap: 4px; margin-top: 8px; }
@@ -271,90 +244,113 @@
     .add-domain-row select { width: 90px; font-size: 10px; padding: 6px; }
     .add-domain-row button { width: auto; padding: 6px 10px; font-size: 10px; }
 
-    /* Templates */
-    .template-item {
-      background: #fff; border-radius: 6px; padding: 8px 10px; margin-bottom: 4px;
-      border: 1px solid #e0e5ec; cursor: pointer; transition: all 0.2s;
-    }
-    .template-item:hover { border-color: #366383; }
-    .template-item-name { font-weight: 600; font-size: 12px; color: #333; }
-    .template-item-info { font-size: 10px; color: #888; margin-top: 2px; }
+    .template-item { background: var(--foam); border-radius: var(--r); padding: 10px; margin-bottom: 4px; border: 1px solid var(--border); cursor: pointer; transition: var(--t); }
+    .template-item:hover { border-color: var(--s1); box-shadow: var(--shadow); }
+    .template-item-name { font-weight: 600; font-size: 13px; color: var(--text); font-family: 'DM Serif Display', serif; }
+    .template-item-info { font-size: 10px; color: var(--text-muted); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
     .template-item-actions { display: flex; gap: 4px; margin-top: 6px; }
-    .template-item-actions button { width: auto; padding: 3px 8px; font-size: 9px; }
+    .template-item-actions button { width: auto; padding: 4px 8px; font-size: 9px; }
 
-    .template-form { background: #fff; border-radius: 8px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e5ec; }
-    .template-form-row { display: flex; gap: 6px; margin-bottom: 6px; }
+    .template-form { background: var(--foam); border-radius: var(--r-lg); padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); }
+    .template-form-row { display: flex; gap: 8px; margin-bottom: 7px; }
     .template-form-row > div { flex: 1; }
     .template-form-row label { font-size: 9px; }
-    .template-form-row input { font-size: 10px; padding: 5px 7px; }
+    .template-form-row input, .template-form-row select { font-size: 12px; padding: 6px 8px; }
 
-    /* Export/Import */
+    .pdf-drop-zone {
+      border: 2px dashed var(--s1); border-radius: var(--r); padding: 14px;
+      text-align: center; margin-bottom: 10px; cursor: pointer; transition: var(--t);
+      background: color-mix(in srgb, var(--s1) 5%, transparent);
+    }
+    .pdf-drop-zone:hover, .pdf-drop-zone.dragover {
+      background: color-mix(in srgb, var(--s1) 12%, transparent); border-color: var(--s2);
+    }
+    .pdf-drop-zone-text { font-size: 13px; font-weight: 600; color: var(--s1); font-family: 'DM Serif Display', serif; }
+    .pdf-drop-zone-hint { font-size: 10px; color: var(--text-muted); margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
+
     .import-export-row { display: flex; gap: 6px; margin-top: 8px; }
     .import-export-row button { flex: 1; }
+
+    .rate-source-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+    .rate-source-row select { flex: 1; font-size: 11px; }
+    .rate-source-row button { width: auto; padding: 8px 12px; font-size: 10px; }
+
+    .accordion { margin-bottom: 8px; border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; background: var(--foam); }
+    .accordion-header {
+      padding: 10px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+      font-size: 13px; font-weight: 600; color: var(--text); font-family: 'DM Serif Display', serif;
+      transition: var(--t); user-select: none;
+    }
+    .accordion-header:hover { color: var(--s1); }
+    .accordion-arrow { font-size: 10px; color: var(--text-muted); transition: transform 0.3s ease; font-family: 'JetBrains Mono', monospace; }
+    .accordion.open .accordion-arrow { transform: rotate(180deg); }
+    .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+    .accordion.open .accordion-body { max-height: 600px; }
+    .accordion-body-inner { padding: 0 14px 14px; }
+
+    .toast {
+      position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
+      background: var(--text); color: var(--bg);
+      padding: 6px 14px; border-radius: var(--r); font-size: 11px;
+      font-family: 'JetBrains Mono', monospace; z-index: 9999;
+      opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
   </style>
 </head>
 <body>
-  <div class="tabs">
-    <div class="tab active" data-tab="settings">Settings</div>
-    <div class="tab" data-tab="domains">Domains</div>
-    <div class="tab" data-tab="templates">Templates</div>
-    <div class="tab" data-tab="tools">Tools</div>
-    <div class="tab" data-tab="price">Price</div>
+  <div class="season-bar"></div>
+  <div class="header">
+    <div class="header-top">
+      <div class="header-title">Passport <em>AutoFill</em></div>
+      <div class="header-actions">
+        <button class="icon-btn" id="quickCopyEmail" title="Copy email">&#9993;</button>
+        <button class="icon-btn" id="quickCopyPhone" title="Copy phone">&#9742;</button>
+        <div class="lang-switch">
+          <button class="lang-btn active" id="langRu">RU</button>
+          <button class="lang-btn" id="langEn">EN</button>
+        </div>
+      </div>
+    </div>
+    <div class="tabs">
+      <div class="tab active" data-tab="settings" data-i18n="settings">Настройки</div>
+      <div class="tab" data-tab="tools" data-i18n="tools">Инструменты</div>
+      <div class="tab" data-tab="price" data-i18n="price">Курс</div>
+      <div class="tab" data-tab="templates" data-i18n="templates">Шаблоны</div>
+      <div class="tab" data-tab="history" data-i18n="history">История</div>
+    </div>
   </div>
 
-  <!-- Settings Tab -->
   <div id="settings" class="tab-content active">
-    <h3>Default Settings</h3>
-
+    <h3 data-i18n="default_settings">Основные настройки</h3>
     <div class="form-group">
-      <label for="email">Email</label>
+      <label for="email" data-i18n="email">Эл. почта</label>
       <input type="email" id="email" placeholder="agent@mail.ru">
       <div id="email-error" class="field-error"></div>
     </div>
-
     <div class="form-group">
-      <label for="phone">Phone</label>
+      <label for="phone" data-i18n="phone">Телефон</label>
       <input type="text" id="phone" placeholder="7771234567">
-      <div class="field-hint">10-12 digits without spaces</div>
+      <div class="field-hint" data-i18n="phone_hint">10-12 цифр без пробелов</div>
       <div id="phone-error" class="field-error"></div>
     </div>
-
     <div class="checkbox-group">
       <input type="checkbox" id="autoFill">
-      <label for="autoFill">Auto-fill without preview</label>
+      <label for="autoFill" data-i18n="auto_fill">Автозаполнение без предпросмотра</label>
     </div>
-
-    <button id="saveBtn">Save Settings</button>
+    <button id="saveBtn" data-i18n="save_settings">Сохранить</button>
     <div id="msg" class="msg"></div>
-
-    <div class="section-title">Updates</div>
-    <button id="checkUpdateBtn" class="secondary">Check for Updates</button>
+    <div class="section-title" data-i18n="updates">Обновления</div>
+    <button id="checkUpdateBtn" class="secondary" data-i18n="check_updates">Проверить обновления</button>
     <div id="updateStatus" class="update-status"></div>
-
-    <div class="section-title">Data</div>
+    <div class="section-title" data-i18n="data">Данные</div>
     <div class="import-export-row">
-      <button id="exportBtn" class="secondary">Export Settings</button>
-      <button id="importBtn" class="secondary">Import Settings</button>
+      <button id="exportBtn" class="secondary" data-i18n="export_settings">Экспорт</button>
+      <button id="importBtn" class="secondary" data-i18n="import_settings">Импорт</button>
+      <button id="exportCsvBtn" class="secondary" data-i18n="export_csv">CSV</button>
     </div>
     <input type="file" id="importFile" accept=".json" style="display:none">
-
-    <div class="version-info">
-      Version <span id="version">-</span> |
-      <a href="https://github.com/mansur54321/passport-autofill/releases" target="_blank">Releases</a>
-    </div>
-  </div>
-
-  <!-- Domains Tab -->
-  <div id="domains" class="tab-content">
-    <h3>Supported Domains</h3>
-    <div class="tips-box" style="margin-bottom:10px;">
-      <h4>Info</h4>
-      <ul>
-        <li>Default domains cannot be removed</li>
-        <li>Add custom domains when operators change subdomains</li>
-        <li>Pattern format: *://*.example.com/*</li>
-      </ul>
-    </div>
+    <div class="section-title" data-i18n="supported_domains">Домены</div>
     <div id="domainList"></div>
     <div class="add-domain-row">
       <input type="text" id="newDomainPattern" placeholder="*://*.example.com/*">
@@ -362,161 +358,221 @@
         <option value="fstravel">Fstravel</option>
         <option value="kompastour">Kompastour</option>
         <option value="kazunion">KazUnion</option>
+        <option value="joinup">JoinUp</option>
+        <option value="anex">AnexTour</option>
+        <option value="selfie">SelfieTravel</option>
+        <option value="pegast">Pegast</option>
       </select>
-      <button id="addDomainBtn">Add</button>
+      <button id="addDomainBtn" data-i18n="add">+</button>
+    </div>
+    <div class="section-title">Авто-логин операторов</div>
+    <div id="credsList"></div>
+    <div class="add-domain-row">
+      <select id="credOperator">
+        <option value="kompastour">Kompastour</option>
+        <option value="kazunion">KazUnion</option>
+        <option value="joinup">JoinUp</option>
+        <option value="anex">AnexTour</option>
+        <option value="selfie">SelfieTravel</option>
+      </select>
+      <input type="text" id="credLogin" placeholder="Логин" style="flex:1;">
+      <input type="password" id="credPassword" placeholder="Пароль" style="flex:1;">
+      <button id="saveCredBtn">+</button>
+    </div>
+    <div class="add-domain-row" style="margin-top:4px;">
+      <input type="text" id="credLabel" placeholder="Метка (напр. Zhanar Travel)" style="flex:1;">
+    </div>
+    <div class="version-info">
+      <span data-i18n="version">Версия</span> <span id="version">-</span> |
+      <a href="https://github.com/mansur54321/passport-autofill/releases" target="_blank" data-i18n="releases">Релизы</a>
     </div>
   </div>
 
-  <!-- Templates Tab -->
-  <div id="templates" class="tab-content">
-    <h3>Tourist Templates</h3>
-    <div class="tips-box" style="margin-bottom:10px;">
-      <h4>Info</h4>
-      <ul>
-        <li>Save tourist data for quick fill without PDF</li>
-        <li>Click template to fill on current page</li>
-        <li>Ctrl+Shift+P to open file dialog</li>
-      </ul>
-    </div>
-
-    <div class="template-form">
-      <div class="template-form-row">
-        <div><label>Name</label><input type="text" id="tplName" placeholder="Template name"></div>
-      </div>
-      <div class="template-form-row">
-        <div><label>Surname</label><input type="text" id="tplSurname"></div>
-        <div><label>Given Name</label><input type="text" id="tplGivenName"></div>
-      </div>
-      <div class="template-form-row">
-        <div><label>Passport N</label><input type="text" id="tplPassport"></div>
-        <div><label>IIN</label><input type="text" id="tplIIN" maxlength="12"></div>
-      </div>
-      <div class="template-form-row">
-        <div><label>Birth Date</label><input type="text" id="tplBirth" placeholder="DD.MM.YYYY"></div>
-        <div><label>Valid Until</label><input type="text" id="tplValid" placeholder="DD.MM.YYYY"></div>
-      </div>
-      <div class="template-form-row">
-        <div><label>Gender</label>
-          <select id="tplGender"><option value="1">Male</option><option value="0">Female</option></select>
-        </div>
-        <div><label>Email</label><input type="email" id="tplEmail"></div>
-      </div>
-      <div class="template-form-row">
-        <div><label>Phone</label><input type="text" id="tplPhone"></div>
-      </div>
-      <button id="saveTemplateBtn" class="success">Save Template</button>
-    </div>
-
-    <div id="templateList"></div>
-  </div>
-
-  <!-- Tools Tab -->
   <div id="tools" class="tab-content">
-    <h3>Travel Agent Tools</h3>
+    <h3 data-i18n="travel_tools">Инструменты</h3>
+    <div class="pdf-drop-zone" id="toolsPdfDrop">
+      <div class="pdf-drop-zone-text" data-i18n="load_pdf">Загрузить паспорт PDF</div>
+      <div class="pdf-drop-zone-hint" data-i18n="load_pdf_hint">Перетащите PDF для проверки данных</div>
+    </div>
+    <input type="file" id="toolsPdfInput" accept=".pdf,image/*" style="display:none">
+    <div id="pdfPreview" class="tool-result" style="display:none;"></div>
 
-    <div class="tool-panel">
-      <h4>IIN Validator</h4>
-      <div class="form-group">
-        <label for="iinInput">IIN (12 digits)</label>
-        <input type="text" id="iinInput" placeholder="000000000000" maxlength="12">
-      </div>
-      <button id="validateIinBtn">Validate IIN</button>
-      <div id="iinResult" class="tool-result"></div>
+    <div class="accordion open" id="acc-iin">
+      <div class="accordion-header"><span data-i18n="iin_validator">Проверка ИИН</span><span class="accordion-arrow">&#9660;</span></div>
+      <div class="accordion-body"><div class="accordion-body-inner">
+        <div class="form-group">
+          <label for="iinInput" data-i18n="iin_12">ИИН (12 цифр)</label>
+          <input type="text" id="iinInput" placeholder="000000000000" maxlength="12">
+        </div>
+        <button id="validateIinBtn" data-i18n="validate_iin">Проверить ИИН</button>
+        <div id="iinResult" class="tool-result"></div>
+      </div></div>
     </div>
 
-    <div class="tool-panel">
-      <h4>Passport Validity</h4>
-      <div class="form-group">
-        <label for="passportExpiry">Expiry Date</label>
-        <input type="text" id="passportExpiry" placeholder="DD.MM.YYYY">
-      </div>
-      <button id="checkPassportBtn">Check Validity</button>
-      <div id="passportResult" class="tool-result"></div>
+    <div class="accordion" id="acc-passport">
+      <div class="accordion-header"><span data-i18n="passport_validity">Срок паспорта</span><span class="accordion-arrow">&#9660;</span></div>
+      <div class="accordion-body"><div class="accordion-body-inner">
+        <div class="form-group">
+          <label for="passportExpiry" data-i18n="expiry_date">Дата окончания</label>
+          <input type="text" id="passportExpiry" placeholder="DD.MM.YYYY">
+        </div>
+        <div class="form-group">
+          <label for="passportCountry" data-i18n="destination">Страна назначения</label>
+          <select id="passportCountry">
+            <option value="" data-i18n="any">-- Любая --</option>
+            <option value="TR">Turkey (6 months)</option>
+            <option value="EG">Egypt (6 months)</option>
+            <option value="AE">UAE (6 months)</option>
+            <option value="TH">Thailand (6 months)</option>
+            <option value="VN">Vietnam (6 months)</option>
+            <option value="CN">China (6 months)</option>
+            <option value="IN">India (6 months)</option>
+            <option value="ID">Indonesia (6 months)</option>
+            <option value="MY">Malaysia (6 months)</option>
+            <option value="MV">Maldives (6 months)</option>
+            <option value="GR">Greece (3 months)</option>
+            <option value="ES">Spain (3 months)</option>
+            <option value="IT">Italy (3 months)</option>
+            <option value="CY">Cyprus (3 months)</option>
+            <option value="PT">Portugal (3 months)</option>
+            <option value="HR">Croatia (3 months)</option>
+            <option value="BG">Bulgaria (3 months)</option>
+            <option value="UZ">Uzbekistan (3 months)</option>
+            <option value="KG">Kyrgyzstan (3 months)</option>
+            <option value="AZ">Azerbaijan (3 months)</option>
+            <option value="AM">Armenia (3 months)</option>
+            <option value="GE">Georgia (no requirement)</option>
+          </select>
+        </div>
+        <button id="checkPassportBtn" data-i18n="check_validity">Проверить</button>
+        <div id="passportResult" class="tool-result"></div>
+      </div></div>
     </div>
 
-    <div class="tool-panel">
-      <h4>Age Calculator</h4>
-      <div class="form-group">
-        <label for="birthDateInput">Birth Date</label>
-        <input type="text" id="birthDateInput" placeholder="DD.MM.YYYY">
-      </div>
-      <button id="calcAgeBtn">Calculate Age</button>
-      <div id="ageResult" class="tool-result"></div>
+    <div class="accordion" id="acc-age">
+      <div class="accordion-header"><span data-i18n="age_calc">Калькулятор возраста</span><span class="accordion-arrow">&#9660;</span></div>
+      <div class="accordion-body"><div class="accordion-body-inner">
+        <div class="form-group">
+          <label for="birthDateInput" data-i18n="birth_date">Дата рождения</label>
+          <input type="text" id="birthDateInput" placeholder="DD.MM.YYYY">
+        </div>
+        <button id="calcAgeBtn" data-i18n="calc_age">Рассчитать</button>
+        <div id="ageResult" class="tool-result"></div>
+      </div></div>
     </div>
 
-    <div class="tool-panel">
-      <h4>Transliteration</h4>
-      <div class="form-group">
-        <label for="cyrillicInput">Cyrillic Text</label>
-        <input type="text" id="cyrillicInput" placeholder="Иванов Иван">
-      </div>
-      <button id="translitBtn">Transliterate</button>
-      <div id="translitResult" class="tool-result"></div>
-    </div>
-
-    <div class="quick-actions">
-      <h4>Quick Actions</h4>
-      <button class="quick-btn" id="copyEmailBtn"><span>Copy default email</span></button>
-      <button class="quick-btn" id="copyPhoneBtn"><span>Copy default phone</span></button>
+    <div class="accordion" id="acc-translit">
+      <div class="accordion-header"><span data-i18n="transliteration">Транслитерация</span><span class="accordion-arrow">&#9660;</span></div>
+      <div class="accordion-body"><div class="accordion-body-inner">
+        <div class="form-group">
+          <label for="cyrillicInput" data-i18n="cyrillic_text">Текст на кириллице</label>
+          <input type="text" id="cyrillicInput" placeholder="Иванов Иван">
+        </div>
+        <button id="translitBtn" data-i18n="translit">Транслитерировать</button>
+        <div id="translitResult" class="tool-result"></div>
+      </div></div>
     </div>
   </div>
 
-  <!-- Price Tab -->
   <div id="price" class="tab-content">
-    <h3>Price Monitor</h3>
-
+    <h3 data-i18n="price_monitor">Монитор цен</h3>
     <div class="tool-panel">
-      <h4>Currency Rates (FUN&SUN)</h4>
-      <div id="currencyRates" class="currency-rates">
-        <div class="currency-loading">Loading rates...</div>
+      <h4 data-i18n="currency_rates">Курсы валют</h4>
+      <div class="rate-source-row">
+        <select id="rateSourceSelect">
+          <option value="nbkz">National Bank of Kazakhstan</option>
+          <option value="auto" data-i18n="auto_source">Авто (текущая страница)</option>
+          <option value="kompastour">Kompastour</option>
+          <option value="kazunion">KazUnion</option>
+          <option value="joinup">JoinUp</option>
+          <option value="anex">AnexTour</option>
+          <option value="selfie">SelfieTravel</option>
+        </select>
+        <button id="refreshRatesBtn" class="secondary" data-i18n="refresh_rates">Обновить</button>
       </div>
-      <button id="refreshRatesBtn" class="secondary" style="margin-top:8px;">Refresh Rates</button>
+      <div id="currencyRates" class="currency-rates">
+        <div data-i18n="rates_not_loaded">Курсы не загружены</div>
+      </div>
     </div>
-
     <div class="tool-panel">
-      <h4>Price Calculator</h4>
+      <h4 data-i18n="price_calculator">Калькулятор цены</h4>
       <div class="form-group">
-        <label for="priceInput">Price</label>
+        <label for="priceInput" data-i18n="enter_price">Введите цену</label>
         <input type="text" id="priceInput" placeholder="1000">
       </div>
       <div class="form-group">
-        <label for="currencyFrom">From</label>
         <select id="currencyFrom">
-          <option value="USD">USD</option>
-          <option value="EUR">EUR</option>
-          <option value="RUB">RUB</option>
-          <option value="UZS">UZS</option>
-          <option value="KGS">KGS</option>
-          <option value="AZN">AZN</option>
+          <option value="USD">USD</option><option value="EUR">EUR</option><option value="RUB">RUB</option>
+          <option value="UZS">UZS</option><option value="KGS">KGS</option><option value="AZN">AZN</option>
+          <option value="GEL">GEL</option><option value="TRY">TRY</option><option value="THB">THB</option>
+          <option value="AED">AED</option><option value="CNY">CNY</option><option value="INR">INR</option>
+          <option value="VND">VND</option><option value="MYR">MYR</option><option value="IDR">IDR</option>
+          <option value="MVR">MVR</option>
         </select>
       </div>
-      <button id="calcPriceBtn">Convert to KZT</button>
+      <button id="calcPriceBtn" data-i18n="convert_kzt">Конвертировать в KZT</button>
       <div id="priceResult" class="tool-result"></div>
     </div>
-
-    <div class="quick-actions">
-      <h4>Quick Convert to KZT</h4>
+    <div class="tool-panel">
+      <h4 data-i18n="quick_convert">Быстрая конвертация</h4>
       <div class="quick-convert">
-        <div class="quick-convert-row">
-          <span class="qc-currency">USD</span>
-          <input type="number" id="quickUSD" placeholder="0" class="qc-input">
-          <span class="qc-result" id="quickUSDResult">= 0 KZT</span>
-        </div>
-        <div class="quick-convert-row">
-          <span class="qc-currency">EUR</span>
-          <input type="number" id="quickEUR" placeholder="0" class="qc-input">
-          <span class="qc-result" id="quickEURResult">= 0 KZT</span>
-        </div>
-        <div class="quick-convert-row">
-          <span class="qc-currency">RUB</span>
-          <input type="number" id="quickRUB" placeholder="0" class="qc-input">
-          <span class="qc-result" id="quickRUBResult">= 0 KZT</span>
-        </div>
+        <div class="quick-convert-row"><span class="qc-currency">USD</span><input type="number" id="quickUSD" placeholder="0" class="qc-input"><span class="qc-result" id="quickUSDResult">= 0 KZT</span></div>
+        <div class="quick-convert-row"><span class="qc-currency">EUR</span><input type="number" id="quickEUR" placeholder="0" class="qc-input"><span class="qc-result" id="quickEURResult">= 0 KZT</span></div>
+        <div class="quick-convert-row"><span class="qc-currency">RUB</span><input type="number" id="quickRUB" placeholder="0" class="qc-input"><span class="qc-result" id="quickRUBResult">= 0 KZT</span></div>
       </div>
     </div>
   </div>
 
+  <div id="templates" class="tab-content">
+    <h3 data-i18n="tourist_templates">Шаблоны туристов</h3>
+    <div class="template-form">
+      <div class="pdf-drop-zone" id="tplPdfDrop">
+        <div class="pdf-drop-zone-text" data-i18n="load_pdf">Загрузить PDF</div>
+        <div class="pdf-drop-zone-hint" data-i18n="load_pdf_hint">Перетащите паспорт PDF</div>
+      </div>
+      <input type="file" id="tplPdfInput" accept=".pdf,image/*" style="display:none">
+      <div class="template-form-row">
+        <div><label data-i18n="name">Название</label><input type="text" id="tplName" placeholder="Имя шаблона"></div>
+      </div>
+      <div class="template-form-row">
+        <div><label data-i18n="surname">Фамилия</label><input type="text" id="tplSurname"></div>
+        <div><label data-i18n="given_name">Имя</label><input type="text" id="tplGivenName"></div>
+      </div>
+      <div class="template-form-row">
+        <div><label data-i18n="passport_n">Номер паспорта</label><input type="text" id="tplPassport"></div>
+        <div><label data-i18n="iin">ИИН</label><input type="text" id="tplIIN" maxlength="12"></div>
+      </div>
+      <div class="template-form-row">
+        <div><label data-i18n="birth_date">Дата рождения</label><input type="text" id="tplBirth" placeholder="DD.MM.YYYY"></div>
+        <div><label data-i18n="valid_until">Действителен до</label><input type="text" id="tplValid" placeholder="DD.MM.YYYY"></div>
+      </div>
+      <div class="template-form-row">
+        <div><label data-i18n="gender">Пол</label>
+          <select id="tplGender"><option value="1" data-i18n="male">Мужской</option><option value="0" data-i18n="female">Женский</option></select>
+        </div>
+        <div><label data-i18n="email">Эл. почта</label><input type="email" id="tplEmail"></div>
+      </div>
+      <div class="template-form-row">
+        <div><label data-i18n="phone">Телефон</label><input type="text" id="tplPhone"></div>
+      </div>
+      <button id="saveTemplateBtn" class="success" data-i18n="save_template">Сохранить шаблон</button>
+    </div>
+    <div id="templateList"></div>
+  </div>
+
+  <div id="history" class="tab-content">
+    <h3 data-i18n="fill_history">История заполнений</h3>
+    <div id="historyList" style="max-height:400px;overflow-y:auto;"></div>
+    <div class="import-export-row">
+      <button id="clearHistoryBtn" class="danger" data-i18n="clear_history">Очистить</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="i18n.js"></script>
   <script src="passport-parser.js"></script>
+  <script src="lib/pdf.min.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

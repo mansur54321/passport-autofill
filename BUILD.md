@@ -9,21 +9,41 @@ Use `manifest.json` as is.
 3. Click "Load unpacked"
 4. Select the extension folder
 
-## Firefox
-Use `manifest.firefox.json` (rename to `manifest.json` or create a build).
-
-### Quick Install:
+### Build:
 ```bash
-# Create Firefox build
-cp manifest.firefox.json manifest-firefox-build.json
+node build.js chrome
+# Output: dist/chrome/
 ```
 
-Then:
+## Firefox
+Firefox MV3 (109+).
+
+### Build:
+```bash
+node build.js firefox
+# Output: dist/firefox/
+```
+
+### Install:
 1. Open `about:debugging`
 2. Click "This Firefox"
 3. Click "Load Temporary Add-on"
-4. Select `manifest-firefox-build.json`
+4. Select `dist/firefox/manifest.json`
 
 ### Permanent Install (signed):
 1. Go to https://addons.mozilla.org/developers/
 2. Submit the extension for signing
+
+### Build both:
+```bash
+node build.js
+# Output: dist/chrome/ and dist/firefox/
+```
+
+## Firefox differences from Chrome
+- `background.scripts` instead of `background.service_worker`
+- No `webNavigation` permission (handled gracefully)
+- `optional_permissions` instead of `optional_host_permissions`
+- `scripting.executeScript` uses promises (handled with fallback)
+- `importScripts` not available (loaded via `background.scripts` array)
+- `chrome` shim: `if (typeof browser !== 'undefined') var chrome = browser;`

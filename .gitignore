@@ -28,3 +28,4 @@ coverage/
 
 # Test websites
 websites/
+*.zip

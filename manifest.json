@@ -1,15 +1,23 @@
 {
   "manifest_version": 3,
   "name": "Passport AutoFill (Multi-Operator)",
-  "version": "6.0.0",
+  "version": "0.7.0",
   "description": "Auto-fill passport data for travel B2B sites (PDF Drag&Drop, OCR, Templates)",
-  "permissions": ["activeTab", "storage", "scripting", "alarms", "notifications", "tabs"],
+  "permissions": ["activeTab", "storage", "scripting", "alarms", "notifications", "tabs", "webNavigation"],
   "host_permissions": [
     "*://*.fstravel.asia/*",
     "*://*.fstravel.com/*",
     "*://*.kompastour.kz/*",
     "*://*.kompastour.com/*",
     "*://*.kazunion.com/*",
+    "*://*.joinup.kz/*",
+    "*://*.anextour.kz/*",
+    "*://*.selfietravel.kz/*",
+    "*://*.pegast.asia/*",
+    "*://*.sanat.kz/*",
+    "*://*.abktourism.kz/*",
+    "https://api.exchangerate-api.com/*",
+    "https://open.er-api.com/*",
     "file://*/*",
     "https://api.github.com/*",
     "https://cdn.jsdelivr.net/*"
@@ -25,7 +33,7 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_icon": "icon.png"
+    "default_icon": "icons/icon.png"
   },
   "background": {
     "service_worker": "background.js"
@@ -38,16 +46,23 @@
         "*://*.kompastour.kz/*",
         "*://*.kompastour.com/*",
         "*://*.kazunion.com/*",
+        "*://*.joinup.kz/*",
+        "*://*.anextour.kz/*",
+        "*://*.selfietravel.kz/*",
+        "*://*.pegast.asia/*",
+        "*://*.sanat.kz/*",
+        "*://*.abktourism.kz/*",
         "file://*/*"
       ],
-      "js": ["pdf.min.js", "utils.js", "passport-parser.js", "content.js"],
+      "js": ["lib/pdf.min.js", "lib/utils.js", "i18n.js", "passport-parser.js", "lib/tesseract.min.js", "content.js"],
       "css": ["style.css"],
-      "run_at": "document_idle"
+      "run_at": "document_idle",
+      "all_frames": true
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["pdf.worker.min.js", "icon.png", "tesseract.min.js"],
+      "resources": ["lib/pdf.worker.min.js", "lib/tesseract.min.js", "icons/icon.png"],
       "matches": ["<all_urls>"]
     }
   ],

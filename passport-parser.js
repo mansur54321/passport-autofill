@@ -1,3 +1,6 @@
+if (typeof self !== 'undefined' && self.PassportParser) {
+    // Already loaded — skip
+} else {
 const PassportParser = (function() {
     const BLACKLIST_WORDS = [
         'PASSPORT', 'CODE', 'STATE', 'KAZ', 'SURNAME', 'GIVEN', 'NAMES',
@@ -8,6 +11,10 @@ const PassportParser = (function() {
 
     function validateIIN(iin) {
         if (!iin || iin.length !== 12 || !/^\d{12}$/.test(iin)) {
+            return false;
+        }
+        // Reject all-same-digit IINs (000000000000, 111111111111, etc.)
+        if (/^(\d)\1{11}$/.test(iin)) {
             return false;
         }
 
@@ -315,15 +322,71 @@ const PassportParser = (function() {
         return data;
     }
 
+    const COUNTRY_RULES = {
+        'TR': { months: 6, name: 'Turkey' },
+        'EG': { months: 6, name: 'Egypt' },
+        'AE': { months: 6, name: 'UAE' },
+        'TH': { months: 6, name: 'Thailand' },
+        'VN': { months: 6, name: 'Vietnam' },
+        'CN': { months: 6, name: 'China' },
+        'IN': { months: 6, name: 'India' },
+        'ID': { months: 6, name: 'Indonesia' },
+        'MY': { months: 6, name: 'Malaysia' },
+        'MV': { months: 6, name: 'Maldives' },
+        'GR': { months: 3, name: 'Greece' },
+        'ES': { months: 3, name: 'Spain' },
+        'IT': { months: 3, name: 'Italy' },
+        'CY': { months: 3, name: 'Cyprus' },
+        'PT': { months: 3, name: 'Portugal' },
+        'HR': { months: 3, name: 'Croatia' },
+        'BG': { months: 3, name: 'Bulgaria' },
+        'GE': { months: 0, name: 'Georgia' },
+        'KZ': { months: 0, name: 'Kazakhstan' },
+        'RU': { months: 0, name: 'Russia' },
+        'UZ': { months: 3, name: 'Uzbekistan' },
+        'KG': { months: 3, name: 'Kyrgyzstan' },
+        'AZ': { months: 3, name: 'Azerbaijan' },
+        'AM': { months: 3, name: 'Armenia' }
+    };
+
+    function validatePassportExpiry(validDate, countryCode) {
+        if (!validDate) return { valid: false, message: 'No expiry date' };
+
+        const parts = validDate.split('.');
+        if (parts.length !== 3) return { valid: false, message: 'Invalid date format' };
+
+        const expiryDate = new Date(parts[2], parts[1] - 1, parts[0]);
+        const now = new Date();
+        const monthsValid = (expiryDate - now) / (1000 * 60 * 60 * 24 * 30);
+
+        if (monthsValid < 0) return { valid: false, message: 'PASSPORT EXPIRED' };
+
+        const rule = COUNTRY_RULES[countryCode ? countryCode.toUpperCase() : ''];
+        if (!rule) return { valid: true, monthsValid: Math.floor(monthsValid), message: 'OK (no country rule)' };
+
+        if (rule.months > 0 && monthsValid < rule.months) {
+            return {
+                valid: false,
+                monthsValid: Math.floor(monthsValid),
+                message: 'Passport expires in ' + Math.floor(monthsValid) + ' months, but ' + rule.name + ' requires ' + rule.months + ' months'
+            };
+        }
+
+        return { valid: true, monthsValid: Math.floor(monthsValid), message: 'OK for ' + rule.name };
+    }
+
     return {
         parse,
         validateIIN,
         validateIINFull,
         extractFromIIN,
-        parseMRZ
+        parseMRZ,
+        validatePassportExpiry,
+        COUNTRY_RULES
     };
 })();
 
 if (typeof self !== 'undefined') {
     self.PassportParser = PassportParser;
+}
 }
