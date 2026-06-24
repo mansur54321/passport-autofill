@@ -185,7 +185,25 @@ allJs.forEach(function(file) {
     assert(!oldIconRef, file + ' has no old icon.png reference');
 });
 
-// Results
+// Check no file.arrayBuffer() calls (Firefox incompatible)
+console.log('\n=== Firefox Compatibility ===');
+['content.js', 'popup.js'].forEach(function(file) {
+    const code = fs.readFileSync(path.join(__dirname, file), 'utf8');
+    const hasArrayBuffer = code.includes('.arrayBuffer()') && !code.includes('readFileAsArrayBuffer');
+    // Allow .arrayBuffer() only in helper function definitions
+    const rawCalls = code.match(/file\.arrayBuffer\(\)/g) || [];
+    assert(rawCalls.length === 0, file + ' has no direct file.arrayBuffer() calls');
+    const blobUrls = code.match(/URL\.createObjectURL\(file/g) || [];
+    assert(blobUrls.length === 0, file + ' has no URL.createObjectURL(file) calls');
+});
+
+// Check tesseract.min.js exists locally
+assert(fs.existsSync(path.join(__dirname, 'lib/tesseract.min.js')), 'lib/tesseract.min.js exists');
+
+// Check tesseract in manifest content_scripts
+const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, 'manifest.json'), 'utf8'));
+assert(manifest.content_scripts[0].js.includes('lib/tesseract.min.js'), 'tesseract in content_scripts');
+assert(manifest.web_accessible_resources[0].resources.includes('lib/tesseract.min.js'), 'tesseract in web_accessible_resources');
 console.log('\n=== Results ===');
 console.log('Passed: ' + passed);
 console.log('Failed: ' + failed);

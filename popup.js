@@ -365,7 +365,12 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                 // Image OCR — use Tesseract from CDN
                 showToast('Scanning photo...');
                 var img = new Image();
-                img.src = URL.createObjectURL(file);
+                img.src = await new Promise(function(resolve, reject) {
+                    var reader = new FileReader();
+                    reader.onload = function() { resolve(reader.result); };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
                 await new Promise(function(resolve, reject) { img.onload = resolve; img.onerror = reject; });
                 
                 // Load Tesseract from CDN
@@ -390,8 +395,13 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                 if (pdfjs.GlobalWorkerOptions) {
                     pdfjs.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL('lib/pdf.worker.min.js');
                 }
-                var arrayBuffer = await file.arrayBuffer();
-                var pdf = await pdfjs.getDocument({ data: new Uint8Array(arrayBuffer.slice(0)) }).promise;
+                var arrayBuffer = await new Promise(function(resolve, reject) {
+                    var reader = new FileReader();
+                    reader.onload = function() { resolve(reader.result); };
+                    reader.onerror = reject;
+                    reader.readAsArrayBuffer(file);
+                });
+                var pdf = await pdfjs.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
                 var page = await pdf.getPage(1);
                 var textContent = await page.getTextContent();
                 fullText = textContent.items.map(function(item) { return item.str; }).join('\n');
@@ -962,8 +972,13 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                 pdfjs.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL('lib/pdf.worker.min.js');
             }
 
-            var arrayBuffer = await file.arrayBuffer();
-            var pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+            var arrayBuffer = await new Promise(function(resolve, reject) {
+                var reader = new FileReader();
+                reader.onload = function() { resolve(reader.result); };
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+            var pdf = await pdfjs.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
             var page = await pdf.getPage(1);
             var textContent = await page.getTextContent();
             var fullText = textContent.items.map(function(item) { return item.str; }).join('\n');

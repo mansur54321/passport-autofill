@@ -726,8 +726,8 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                     const ocrText = await ocrFromImage(files[i]);
                     fullText = ocrText || '';
                 } else {
-                    const arrayBuffer = await files[i].arrayBuffer();
-                    const copy = new Uint8Array(arrayBuffer.slice(0));
+                    const arrayBuffer = await readFileAsArrayBuffer(files[i]);
+                    const copy = new Uint8Array(arrayBuffer);
                     ensurePdfWorker(); const pdf = await pdfjsLib.getDocument({ data: copy }).promise;
                     const page = await pdf.getPage(1);
                     const textContent = await page.getTextContent();
@@ -926,19 +926,37 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
         return text;
     }
 
+    function readFileAsDataURL(file) {
+        return new Promise(function(resolve, reject) {
+            var reader = new FileReader();
+            reader.onload = function() { resolve(reader.result); };
+            reader.onerror = function() { reject(reader.error); };
+            reader.readAsDataURL(file);
+        });
+    }
+
     async function ocrFromImage(file) {
+        const dataUrl = await readFileAsDataURL(file);
         const img = new Image();
-        img.src = URL.createObjectURL(file);
+        img.src = dataUrl;
         await new Promise(function(resolve, reject) {
             img.onload = resolve;
             img.onerror = reject;
         });
         const text = await ocrRecognize(img);
-        URL.revokeObjectURL(img.src);
         return text;
     }
 
     /* ==================== FILE HANDLING (PDF + Image) ==================== */
+
+    function readFileAsArrayBuffer(file) {
+        return new Promise(function(resolve, reject) {
+            var reader = new FileReader();
+            reader.onload = function() { resolve(reader.result); };
+            reader.onerror = function() { reject(reader.error); };
+            reader.readAsArrayBuffer(file);
+        });
+    }
 
     async function handlePdf(file, touristIndex, zoneElement) {
         updateZoneStatus(zoneElement, 'Processing...', 'blue');
@@ -967,8 +985,8 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
             }
 
             // PDF file
-            const arrayBuffer = await file.arrayBuffer();
-            const copy = new Uint8Array(arrayBuffer.slice(0));
+            const arrayBuffer = await readFileAsArrayBuffer(file);
+            const copy = new Uint8Array(arrayBuffer);
             ensurePdfWorker(); const pdf = await pdfjsLib.getDocument({ data: copy }).promise;
             const page = await pdf.getPage(1);
             const textContent = await page.getTextContent();
