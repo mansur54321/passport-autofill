@@ -587,6 +587,43 @@ if (typeof importScripts === 'function') {
             return false;
         }
 
+        if (message.action === 'parsePdf') {
+            // Firefox: content scripts can't use ReadableStream (PDF.js needs it)
+            // Parse PDF in background where there are no CSP restrictions
+            try {
+                var bytes = new Uint8Array(message.data);
+                if (typeof pdfjsLib === 'undefined' && typeof importScripts === 'function') {
+                    importScripts('lib/pdf.min.js');
+                    if (typeof pdfjsLib !== 'undefined' && pdfjsLib.GlobalWorkerOptions) {
+                        pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+                        if (typeof pdfjsLib.PDFWorker === 'function') {
+                            try { pdfjsLib.PDFWorker.disableWorker = true; } catch(e) {}
+                        }
+                    }
+                }
+                if (typeof pdfjsLib === 'undefined') {
+                    sendResponse({ error: 'pdfjsLib not available in background' });
+                    return false;
+                }
+                pdfjsLib.getDocument({ data: bytes, disableRange: true, disableStream: true, isEvalSupported: false }).promise
+                    .then(function(pdf) {
+                        return pdf.getPage(1).then(function(page) {
+                            return page.getTextContent();
+                        }).then(function(textContent) {
+                            var text = textContent.items.map(function(item) { return item.str; }).join('\n');
+                            pdf.destroy();
+                            sendResponse({ text: text });
+                        });
+                    })
+                    .catch(function(err) {
+                        sendResponse({ error: err.message });
+                    });
+            } catch(e) {
+                sendResponse({ error: e.message });
+            }
+            return true;
+        }
+
         if (message.action === 'validateIIN') {
             const result = PassportParser.validateIINFull(message.iin);
             sendResponse(result);

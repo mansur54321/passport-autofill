@@ -17,27 +17,45 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
     function ensurePdfWorker() {
         try {
             if (typeof pdfjsLib !== 'undefined' && pdfjsLib.GlobalWorkerOptions) {
-                // Firefox: use fake worker (main thread) to avoid ReadableStream CSP
-                var isFirefox = typeof InstallTrigger !== 'undefined' ||
-                    (navigator.userAgent && navigator.userAgent.toLowerCase().includes('firefox'));
-
-                if (isFirefox) {
-                    // Force fake worker — PDF.js runs on main thread, no worker, no ReadableStream
-                    pdfjsLib.GlobalWorkerOptions.workerSrc = '';
-                    pdfjsLib.GlobalWorkerOptions.workerPort = null;
-                    // Disable worker entirely
-                    if (typeof pdfjsLib.PDFWorker === 'function') {
-                        try { pdfjsLib.PDFWorker.disableWorker = true; } catch(e) {}
-                    }
-                } else {
-                    pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL('lib/pdf.worker.min.js');
-                }
+                pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL('lib/pdf.worker.min.js');
             }
         } catch(e) {
             console.error('[PassportAutoFill] pdfjsLib init error:', e);
         }
     }
     ensurePdfWorker();
+
+    // Firefox content scripts can't use ReadableStream (PDF.js needs it).
+    // Fallback: send file to background for parsing.
+    function isFirefox() {
+        return typeof InstallTrigger !== 'undefined' ||
+            (navigator.userAgent && navigator.userAgent.toLowerCase().includes('firefox'));
+    }
+
+    async function parsePdfInBackground(file) {
+        return new Promise(function(resolve, reject) {
+            var reader = new FileReader();
+            reader.onload = function() {
+                var bytes = Array.from(new Uint8Array(reader.result));
+                chrome.runtime.sendMessage(
+                    { action: 'parsePdf', data: bytes },
+                    function(response) {
+                        if (chrome.runtime.lastError) {
+                            reject(new Error(chrome.runtime.lastError.message));
+                            return;
+                        }
+                        if (response && response.text) {
+                            resolve(response.text);
+                        } else {
+                            reject(new Error(response && response.error || 'Background parse failed'));
+                        }
+                    }
+                );
+            };
+            reader.onerror = function() { reject(reader.error); };
+            reader.readAsArrayBuffer(file);
+        });
+    }
 
     let lastKnownPrice = 0;
     let previewModal = null;
@@ -998,25 +1016,39 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
                 return;
             }
 
-            // PDF file
-            const arrayBuffer = await readFileAsArrayBuffer(file);
-            const copy = new Uint8Array(arrayBuffer);
-            ensurePdfWorker(); const pdf = await pdfjsLib.getDocument({ data: copy, disableRange: true, disableStream: true, isEvalSupported: false }).promise;
-            const page = await pdf.getPage(1);
-            const textContent = await page.getTextContent();
-            const fullText = textContent.items.map(item => item.str).join('\n');
+            // PDF file — Firefox uses background, Chrome uses inline
+            var fullText = '';
+            var pdf = null;
+
+            if (isFirefox()) {
+                updateZoneStatus(zoneElement, 'Parsing PDF (bg)...', 'orange');
+                fullText = await parsePdfInBackground(file);
+            } else {
+                const arrayBuffer = await readFileAsArrayBuffer(file);
+                const copy = new Uint8Array(arrayBuffer);
+                ensurePdfWorker(); const pdfDoc = await pdfjsLib.getDocument({ data: copy, disableRange: true, disableStream: true, isEvalSupported: false }).promise;
+                pdf = pdfDoc;
+                const page = await pdf.getPage(1);
+                const textContent = await page.getTextContent();
+                fullText = textContent.items.map(item => item.str).join('\n');
+            }
 
             let parsedData;
             let ocrUsed = false;
 
             if (fullText.trim().length < 20) {
-                updateZoneStatus(zoneElement, 'No text layer, trying OCR...', 'orange');
-                const ocrText = await ocrFromPdf(pdf);
-                if (ocrText && ocrText.trim().length > 20) {
-                    parsedData = PassportParser.parse(ocrText);
-                    ocrUsed = true;
+                if (pdf && !isFirefox()) {
+                    updateZoneStatus(zoneElement, 'No text layer, trying OCR...', 'orange');
+                    const ocrText = await ocrFromPdf(pdf);
+                    if (ocrText && ocrText.trim().length > 20) {
+                        parsedData = PassportParser.parse(ocrText);
+                        ocrUsed = true;
+                    } else {
+                        updateZoneStatus(zoneElement, 'No text found in PDF', 'red');
+                        return;
+                    }
                 } else {
-                    updateZoneStatus(zoneElement, 'OCR failed - no readable text', 'red');
+                    updateZoneStatus(zoneElement, 'No text found in PDF', 'red');
                     return;
                 }
             } else {

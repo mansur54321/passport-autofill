@@ -45,7 +45,7 @@ function buildFirefox() {
 
     // Firefox MV3 differences:
     // 1. background.scripts instead of background.service_worker
-    manifest.background = { scripts: ['lib/utils.js', 'i18n.js', 'passport-parser.js', 'background.js'] };
+    manifest.background = { scripts: ['lib/pdf.min.js', 'lib/utils.js', 'i18n.js', 'passport-parser.js', 'background.js'] };
 
     // 2. Remove webNavigation (not available in Firefox MV3)
     manifest.permissions = manifest.permissions.filter(p => p !== 'webNavigation');
