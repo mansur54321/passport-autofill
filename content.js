@@ -17,7 +17,21 @@ if (typeof browser !== 'undefined' && typeof chrome === 'undefined') {
     function ensurePdfWorker() {
         try {
             if (typeof pdfjsLib !== 'undefined' && pdfjsLib.GlobalWorkerOptions) {
-                pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL('lib/pdf.worker.min.js');
+                // Firefox: use fake worker (main thread) to avoid ReadableStream CSP
+                var isFirefox = typeof InstallTrigger !== 'undefined' ||
+                    (navigator.userAgent && navigator.userAgent.toLowerCase().includes('firefox'));
+
+                if (isFirefox) {
+                    // Force fake worker — PDF.js runs on main thread, no worker, no ReadableStream
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+                    pdfjsLib.GlobalWorkerOptions.workerPort = null;
+                    // Disable worker entirely
+                    if (typeof pdfjsLib.PDFWorker === 'function') {
+                        try { pdfjsLib.PDFWorker.disableWorker = true; } catch(e) {}
+                    }
+                } else {
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL('lib/pdf.worker.min.js');
+                }
             }
         } catch(e) {
             console.error('[PassportAutoFill] pdfjsLib init error:', e);

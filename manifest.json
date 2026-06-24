@@ -54,7 +54,7 @@
         "*://*.abktourism.kz/*",
         "file://*/*"
       ],
-      "js": ["lib/pdf.min.js", "lib/utils.js", "i18n.js", "passport-parser.js", "lib/tesseract.min.js", "content.js"],
+      "js": ["lib/pdf.min.js", "lib/pdf.worker.min.js", "lib/utils.js", "i18n.js", "passport-parser.js", "lib/tesseract.min.js", "content.js"],
       "css": ["style.css"],
       "run_at": "document_idle",
       "all_frames": true
